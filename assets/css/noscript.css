@@ -10,7 +10,7 @@
 
 	#wrapper {
 		background-color: #000000;
-		background-image: url("../../images/Background.jpg"), linear-gradient(0deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url("../../images/Background.jpg");
+		background-image: url("../../images/Background.jpg"), linear-gradient(0deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)), url("https://github.com/Oriana-Sturza/Oriana-Sturza.github.io/blob/bd24355aa077fd045597ad2654d7bb91743838f2/images/Background.jpg");
 		background-size: auto,								auto,														100% auto;
 		background-position: center,								center,														top center;
 		background-repeat: repeat,								no-repeat,													no-repeat;
