@@ -3961,6 +3961,11 @@ input, select, textarea {
 		width: calc(100% - 4rem);
 		max-width: 72rem;
 		z-index: 2;
+		 width: 100%;
+  background-color: #333;
+  color: white;
+  text-align: center;
+  padding: 20px 0;
 	}
 
 		#footer input, #footer select, #footer textarea {
