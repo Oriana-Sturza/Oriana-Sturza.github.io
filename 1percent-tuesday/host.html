@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HOST · The 1% of Tuesday Club</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { overflow: hidden; }
+    .top-bar { display:flex; align-items:center; justify-content:space-between; padding:12px 20px 0; flex-shrink:0; }
+    .q-header { display:flex; align-items:center; gap:16px; flex-shrink:0; margin-bottom:12px; }
+    .q-num { font-size:.9rem; color:rgba(255,255,255,.5); font-weight:600; }
+    .answer-tally { font-size:.9rem; color:#33ff99; font-weight:700; }
+    .screen { padding:16px 20px; }
+    #screen-lobby { justify-content:center; }
+    #screen-final { overflow-y:auto; }
+    .select-tuesday-hint { font-size:.85rem; color:#ffcc00; text-align:center; background:rgba(255,204,0,.1); border:1px solid rgba(255,204,0,.25); border-radius:10px; padding:10px 16px; }
+  </style>
+</head>
+<body>
+<div id="starfield"></div>
+<div id="app">
+
+  <!-- ── LOBBY ── -->
+  <div id="screen-lobby" class="screen flex-col flex-center gap-20">
+    <div class="game-title"><span class="white">The 1% of </span><span class="rainbow-text">Tuesday</span><span class="white"> Club</span></div>
+    <div class="flex-col gap-8 flex-center">
+      <div class="section-label">Join at</div>
+      <div class="join-url" id="join-url-display"></div>
+      <div class="section-label" style="margin-top:8px">Room Code</div>
+      <div class="room-code-box" id="room-code-display">----</div>
+    </div>
+    <div id="lobby-players" class="player-grid" style="max-width:800px;width:100%"></div>
+    <div class="flex-row gap-12 flex-center flex-wrap">
+      <button class="btn btn-primary" id="btn-start" disabled>Start Game ▶</button>
+      <button class="btn btn-ghost" id="btn-toggle-sound">🔊 Sound On</button>
+      <a href="index.html" class="btn btn-ghost" style="text-decoration:none">← Back</a>
+    </div>
+    <div id="lobby-status" class="dimmed text-center">Waiting for players to join…</div>
+  </div>
+
+  <!-- ── QUESTION ── -->
+  <div id="screen-question" class="screen flex-col gap-12">
+    <div class="top-bar">
+      <div class="game-title" style="font-size:1.4rem"><span class="white">The 1% of </span><span class="rainbow-text">Tuesday</span><span class="white"> Club</span></div>
+      <div class="flex-row gap-16 flex-center">
+        <div class="answer-tally" id="q-tally">0 / 0 answered</div>
+        <div class="timer-wrap" id="timer-wrap">
+          <svg viewBox="0 0 90 90"><circle class="timer-track" cx="45" cy="45" r="38"/><circle class="timer-fill" id="timer-ring" cx="45" cy="45" r="38" stroke-dasharray="238.76" stroke-dashoffset="0"/></svg>
+          <div class="timer-num" id="timer-num">30</div>
+        </div>
+      </div>
+    </div>
+    <div class="prog-bar" style="flex-shrink:0"><div class="prog-fill" id="q-progress"></div></div>
+    <div class="q-card flex-col gap-12" style="flex:1;overflow-y:auto">
+      <div class="q-header">
+        <div class="diff-badge" id="q-diff-badge"></div>
+        <div class="flex-col gap-4">
+          <div class="q-num" id="q-num-label"></div>
+          <div class="q-text" id="q-text"></div>
+        </div>
+      </div>
+      <div id="q-options-wrap"></div>
+    </div>
+    <div class="host-controls">
+      <button class="btn btn-danger" id="btn-reveal">Reveal Answer 🎯</button>
+      <div style="flex:1"></div>
+      <div class="dimmed" id="q-points-label"></div>
+    </div>
+  </div>
+
+  <!-- ── REVEAL ── -->
+  <div id="screen-reveal" class="screen flex-col gap-12">
+    <div class="top-bar">
+      <div class="game-title" style="font-size:1.4rem"><span class="white">The 1% of </span><span class="rainbow-text">Tuesday</span><span class="white"> Club</span></div>
+      <div class="answer-tally" id="rev-stats"></div>
+    </div>
+    <div class="q-card flex-col gap-12" style="flex:1">
+      <div class="q-header">
+        <div class="diff-badge" id="rev-diff-badge"></div>
+        <div class="q-text" id="rev-q-text"></div>
+      </div>
+      <div id="rev-options-wrap"></div>
+      <div class="celebration-text" id="rev-celebration" style="display:none"></div>
+    </div>
+    <div id="rev-who-correct" class="player-grid" style="max-width:800px;width:100%;margin:0 auto"></div>
+    <div class="host-controls">
+      <button class="btn btn-primary" id="btn-next">Next Question ▶</button>
+      <button class="btn btn-ghost" id="btn-show-lb">Show Leaderboard 🏆</button>
+    </div>
+  </div>
+
+  <!-- ── LEADERBOARD ── -->
+  <div id="screen-leaderboard" class="screen flex-col gap-16">
+    <div class="game-title text-center"><span class="white">Leaderboard 🏆</span></div>
+    <ol class="lb-list" id="lb-list"></ol>
+    <div class="host-controls">
+      <button class="btn btn-primary" id="btn-lb-continue">Continue ▶</button>
+    </div>
+  </div>
+
+  <!-- ── CONNECTION INTRO ── -->
+  <div id="screen-conn-intro" class="screen flex-col flex-center gap-20 text-center">
+    <div class="game-title"><span class="white">Who Knows </span><span class="rainbow-text">Tuesday</span><span class="white"> Best? 💛</span></div>
+    <div class="glass" style="padding:24px 32px;max-width:600px">
+      <p style="font-size:1.1rem;line-height:1.7;color:rgba(255,255,255,.8)">
+        5 questions about Tuesday. Everyone answers — <strong style="color:#ffcc00">including Tuesday herself</strong>.
+        At the end, we see whose answers matched hers the most.
+        <br><br>
+        First — <strong style="color:#ffcc00">tap on Tuesday's player card</strong> below to crown her as the birthday star ✨
+      </p>
+    </div>
+    <div class="select-tuesday-hint" id="tuesday-pick-hint">👇 Tap Tuesday's card to select her</div>
+    <div id="conn-player-grid" class="player-grid" style="max-width:800px;width:100%"></div>
+    <div class="host-controls">
+      <button class="btn btn-gold btn-lg" id="btn-start-conn" disabled>Begin Connection Round ✨</button>
+    </div>
+  </div>
+
+  <!-- ── CONNECTION QUESTION ── -->
+  <div id="screen-conn-q" class="screen flex-col gap-12">
+    <div class="top-bar">
+      <div style="font-size:1.1rem;font-weight:800">💛 Connection Round</div>
+      <div class="flex-row gap-16 flex-center">
+        <div class="answer-tally" id="conn-tally">0 / 0 answered</div>
+        <div class="timer-wrap" id="timer-wrap-conn">
+          <svg viewBox="0 0 90 90"><circle class="timer-track" cx="45" cy="45" r="38"/><circle class="timer-fill" id="timer-ring-conn" cx="45" cy="45" r="38" stroke-dasharray="238.76" stroke-dashoffset="0"/></svg>
+          <div class="timer-num" id="timer-num-conn">30</div>
+        </div>
+      </div>
+    </div>
+    <div class="prog-bar" style="flex-shrink:0"><div class="prog-fill" id="conn-progress"></div></div>
+    <div class="q-card flex-col gap-12" style="flex:1">
+      <div class="q-header">
+        <div class="diff-badge" style="background:linear-gradient(135deg,#ffcc00,#ff8800);border-color:transparent;color:#000;font-size:.75rem">CONN<br><span style="font-size:1.1rem">💛</span></div>
+        <div class="flex-col gap-4">
+          <div class="q-num" id="conn-num-label"></div>
+          <div class="q-text" id="conn-q-text"></div>
+        </div>
+      </div>
+      <div id="conn-options-wrap"></div>
+    </div>
+    <div class="host-controls">
+      <button class="btn btn-danger" id="btn-conn-reveal">Reveal ✨</button>
+    </div>
+  </div>
+
+  <!-- ── CONNECTION REVEAL ── -->
+  <div id="screen-conn-reveal" class="screen flex-col gap-12">
+    <div class="top-bar">
+      <div style="font-size:1.1rem;font-weight:800">💛 Connection Round — Reveal</div>
+    </div>
+    <div class="q-card flex-col gap-12">
+      <div class="q-text" id="conn-rev-q-text"></div>
+      <div id="conn-rev-options-wrap"></div>
+    </div>
+    <div class="glass" style="padding:16px 20px;max-width:700px;width:100%;margin:0 auto">
+      <div class="section-label">Tuesday said…</div>
+      <div id="conn-tuesday-said" style="font-size:1.2rem;font-weight:700;color:#ffcc00;margin-top:6px"></div>
+    </div>
+    <div id="conn-player-results" class="player-grid" style="max-width:800px;width:100%;margin:0 auto"></div>
+    <div class="host-controls">
+      <button class="btn btn-primary" id="btn-conn-next">Next ▶</button>
+    </div>
+  </div>
+
+  <!-- ── FINAL ── -->
+  <div id="screen-final" class="screen flex-col gap-16" style="overflow-y:auto">
+    <div class="game-title text-center"><span class="white">Happy </span><span class="rainbow-text">Birthday Tuesday</span><span class="white">! 🎉</span></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;max-width:900px;width:100%;margin:0 auto">
+      <div class="glass flex-col gap-12" style="padding:20px">
+        <div class="section-label text-center">🏆 Top Scorers</div>
+        <ol class="lb-list" id="final-lb-list" style="max-width:100%"></ol>
+      </div>
+      <div class="glass flex-col gap-12" style="padding:20px">
+        <div class="section-label text-center">💛 Most Connected</div>
+        <ol class="lb-list" id="conn-lb-list" style="max-width:100%"></ol>
+      </div>
+    </div>
+    <div class="text-center" style="padding-bottom:20px">
+      <button class="btn btn-ghost" onclick="window.location.href='host.html'">Play Again 🔄</button>
+    </div>
+  </div>
+
+</div><!-- #app -->
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="questions.js"></script>
+<script src="avatars.js"></script>
+<script src="audio.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+// ── STARFIELD ──
+(function(){
+  const sf=document.getElementById('starfield');
+  for(let i=0;i<120;i++){const s=document.createElement('div');const sz=Math.random()*2.5+.5;s.className='star';s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;width:${sz}px;height:${sz}px;--dur:${2+Math.random()*5}s;--delay:${Math.random()*5}s;--op:${.2+Math.random()*.7}`;sf.appendChild(s);}
+})();
+
+// ── STATE ──
+const TIMER_SECS = 30;
+const LETTERS = ['A','B','C','D'];
+let roomCode = '';
+let gameRef = null;
+let gameData = {};
+let timerInterval = null;
+let soundEnabled = true;
+let tuesdayPlayerId = null;
+let connCurrentQ = 0;
+
+// ── SCREENS ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + id);
+  if (el) el.classList.add('active');
+}
+
+// ── ROOM CODE ──
+function generateRoomCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 4; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+// ── INIT ──
+async function init() {
+  roomCode = sessionStorage.getItem('hostRoom') || generateRoomCode();
+  sessionStorage.setItem('hostRoom', roomCode);
+
+  document.getElementById('room-code-display').textContent = roomCode;
+  const base = window.location.href.replace('host.html','player.html');
+  document.getElementById('join-url-display').textContent = base;
+
+  gameRef = db.ref('rooms/' + roomCode);
+
+  // Create/reset room
+  await gameRef.set({
+    status: 'lobby',
+    currentQuestion: 0,
+    timerEnd: 0,
+    tuesdayId: null,
+    players: {}
+  });
+
+  gameRef.on('value', snap => {
+    gameData = snap.val() || {};
+    onGameUpdate();
+  });
+
+  document.getElementById('btn-start').addEventListener('click', startGame);
+  document.getElementById('btn-reveal').addEventListener('click', revealAnswer);
+  document.getElementById('btn-next').addEventListener('click', nextQuestion);
+  document.getElementById('btn-show-lb').addEventListener('click', () => showLeaderboard('question'));
+  document.getElementById('btn-lb-continue').addEventListener('click', lbContinue);
+  document.getElementById('btn-start-conn').addEventListener('click', startConnectionRound);
+  document.getElementById('btn-conn-reveal').addEventListener('click', revealConnectionAnswer);
+  document.getElementById('btn-conn-next').addEventListener('click', nextConnectionQuestion);
+  document.getElementById('btn-toggle-sound').addEventListener('click', toggleSound);
+
+  showScreen('lobby');
+}
+
+// ── TOGGLE SOUND ──
+function toggleSound() {
+  audio.init();
+  soundEnabled = !soundEnabled;
+  audio.enabled = soundEnabled;
+  document.getElementById('btn-toggle-sound').textContent = soundEnabled ? '🔊 Sound On' : '🔇 Sound Off';
+}
+
+// ── GAME UPDATE LISTENER ──
+function onGameUpdate() {
+  const players = gameData.players || {};
+  const pList = Object.values(players);
+
+  // Update lobby
+  if (gameData.status === 'lobby') {
+    renderLobbyPlayers(players);
+    document.getElementById('btn-start').disabled = pList.length < 2;
+    document.getElementById('lobby-status').textContent =
+      pList.length === 0 ? 'Waiting for players to join…' :
+      `${pList.length} player${pList.length > 1 ? 's' : ''} joined`;
+  }
+
+  // Update answer tally during question
+  if (gameData.status === 'question') {
+    const qIdx = gameData.currentQuestion;
+    const answered = pList.filter(p => p.answers && p.answers[qIdx] !== undefined).length;
+    const el = document.getElementById('q-tally');
+    if (el) el.textContent = `${answered} / ${pList.length} answered`;
+  }
+
+  if (gameData.status === 'connection') {
+    const cIdx = gameData.connCurrentQ || 0;
+    const answered = pList.filter(p => p.connAnswers && p.connAnswers[cIdx] !== undefined).length;
+    const el = document.getElementById('conn-tally');
+    if (el) el.textContent = `${answered} / ${pList.length} answered`;
+  }
+}
+
+// ── LOBBY PLAYERS ──
+function renderLobbyPlayers(players) {
+  const el = document.getElementById('lobby-players');
+  el.innerHTML = '';
+  Object.entries(players).forEach(([pid, p]) => {
+    const av = getAvatar(p.avatar);
+    const div = document.createElement('div');
+    div.className = 'p-card';
+    div.innerHTML = renderAvatarBadge(av, 52) + `<div class="p-name">${escHtml(p.name)}</div>`;
+    el.appendChild(div);
+  });
+}
+
+// ── START GAME ──
+async function startGame() {
+  audio.init();
+  await gameRef.update({ status: 'question', currentQuestion: 0, timerEnd: Date.now() + TIMER_SECS * 1000 });
+  showQuestionScreen(0);
+}
+
+// ── QUESTION SCREEN ──
+function showQuestionScreen(qIdx) {
+  const q = QUESTIONS[qIdx];
+  showScreen('question');
+  document.getElementById('q-diff-badge').className = 'diff-badge diff-' + q.difficulty;
+  document.getElementById('q-diff-badge').textContent = q.difficultyLabel;
+  document.getElementById('q-num-label').textContent = `Question ${qIdx + 1} of ${QUESTIONS.length} · ${q.points} pts`;
+  document.getElementById('q-text').textContent = q.text;
+  document.getElementById('q-points-label').textContent = `Worth ${q.points} points`;
+  document.getElementById('q-progress').style.width = ((qIdx + 1) / QUESTIONS.length * 100) + '%';
+
+  renderOptions(q, 'q-options-wrap', false);
+  startTimer(TIMER_SECS, 'timer-ring', 'timer-num', 'timer-wrap');
+  gameRef.update({ status: 'question', currentQuestion: qIdx, timerEnd: Date.now() + TIMER_SECS * 1000 });
+}
+
+// ── RENDER OPTIONS ──
+function renderOptions(q, wrapperId, revealed) {
+  const wrap = document.getElementById(wrapperId);
+  wrap.innerHTML = '';
+  const isPic = q.type === 'picture';
+  const grid = document.createElement('div');
+  grid.className = isPic ? 'pic-grid' : 'answer-grid';
+
+  q.options.forEach((opt, i) => {
+    const div = document.createElement('div');
+    if (isPic) {
+      div.className = 'pic-opt' + (revealed ? (i === q.correct ? ' correct' : ' wrong') : '');
+      div.innerHTML = `<div class="pic-emoji">${q.pictureIcons[i]}</div><div>${opt}</div>`;
+    } else {
+      div.className = 'answer-opt' + (revealed ? (i === q.correct ? ' correct' : ' wrong') : '');
+      div.dataset.letter = LETTERS[i];
+      div.innerHTML = `<div class="letter">${LETTERS[i]}</div><div>${opt}</div>`;
+    }
+    grid.appendChild(div);
+  });
+  wrap.appendChild(grid);
+}
+
+// ── TIMER ──
+function startTimer(secs, ringId, numId, wrapId) {
+  clearInterval(timerInterval);
+  const circumference = 238.76;
+  const ring = document.getElementById(ringId);
+  const num = document.getElementById(numId);
+  const wrap = document.getElementById(wrapId);
+  let remaining = secs;
+
+  function tick() {
+    if (!ring || !num) return;
+    const pct = remaining / secs;
+    ring.style.strokeDashoffset = circumference * (1 - pct);
+    num.textContent = remaining;
+    if (remaining <= 5) {
+      wrap.classList.add('timer-urgent');
+      if (soundEnabled) audio.urgentTick();
+    } else {
+      wrap.classList.remove('timer-urgent');
+      if (remaining <= 10 && soundEnabled) audio.tick();
+    }
+    if (remaining <= 0) { clearInterval(timerInterval); return; }
+    remaining--;
+  }
+  tick();
+  timerInterval = setInterval(tick, 1000);
+}
+
+function stopTimer() { clearInterval(timerInterval); }
+
+// ── REVEAL ──
+function revealAnswer() {
+  stopTimer();
+  const qIdx = gameData.currentQuestion || 0;
+  const q = QUESTIONS[qIdx];
+  const players = gameData.players || {};
+
+  gameRef.update({ status: 'reveal' });
+
+  showScreen('reveal');
+  document.getElementById('rev-diff-badge').className = 'diff-badge diff-' + q.difficulty;
+  document.getElementById('rev-diff-badge').textContent = q.difficultyLabel;
+  document.getElementById('rev-q-text').textContent = q.text;
+  renderOptions(q, 'rev-options-wrap', true);
+
+  const celEl = document.getElementById('rev-celebration');
+  celEl.textContent = q.celebration;
+  celEl.style.display = 'block';
+
+  // Award points
+  const updates = {};
+  let correctCount = 0;
+  Object.entries(players).forEach(([pid, p]) => {
+    const ans = p.answers && p.answers[qIdx];
+    if (ans !== undefined && parseInt(ans) === q.correct) {
+      correctCount++;
+      const newScore = (p.score || 0) + q.points;
+      updates[`players/${pid}/score`] = newScore;
+    }
+  });
+  if (Object.keys(updates).length) gameRef.update(updates);
+
+  // Show who got it right
+  const revGrid = document.getElementById('rev-who-correct');
+  revGrid.innerHTML = '';
+  Object.entries(players).forEach(([pid, p]) => {
+    const ans = p.answers && p.answers[qIdx];
+    const correct = ans !== undefined && parseInt(ans) === q.correct;
+    const av = getAvatar(p.avatar);
+    const div = document.createElement('div');
+    div.className = 'p-card';
+    div.style.borderColor = correct ? '#33ff99' : '#ff0055';
+    div.style.background = correct ? 'rgba(51,255,153,.12)' : 'rgba(255,0,80,.12)';
+    div.innerHTML = renderAvatarBadge(av, 44) + `<div class="p-name">${escHtml(p.name)}</div><div style="font-size:.8rem">${correct ? '✅' : '❌'}</div>`;
+    revGrid.appendChild(div);
+  });
+
+  const total = Object.keys(players).length;
+  document.getElementById('rev-stats').textContent = `${correctCount} / ${total} got it right`;
+
+  if (soundEnabled) { audio.init(); correctCount > 0 ? audio.fanfare() : audio.reveal(); }
+  if (correctCount > 0) spawnConfetti(15);
+
+  // Show "Next" vs "Leaderboard" logic
+  document.getElementById('btn-next').textContent =
+    qIdx < QUESTIONS.length - 1 ? 'Next Question ▶' : 'See Final Leaderboard 🏆';
+}
+
+// ── NEXT QUESTION ──
+async function nextQuestion() {
+  const qIdx = (gameData.currentQuestion || 0);
+  const nextIdx = qIdx + 1;
+
+  if (nextIdx >= QUESTIONS.length) {
+    showLeaderboard('before-connection');
+    return;
+  }
+
+  // Show leaderboard every 5 questions
+  if (nextIdx % 5 === 0 && nextIdx < QUESTIONS.length) {
+    showLeaderboard('question', nextIdx);
+    return;
+  }
+
+  await gameRef.update({ currentQuestion: nextIdx });
+  showQuestionScreen(nextIdx);
+}
+
+// ── LEADERBOARD ──
+let _lbNextAction = null;
+function showLeaderboard(nextAction, nextQIdx) {
+  _lbNextAction = { action: nextAction, nextQIdx };
+  showScreen('leaderboard');
+  renderLeaderboard('lb-list');
+  document.getElementById('btn-lb-continue').textContent =
+    nextAction === 'before-connection' ? 'Connection Round ✨' :
+    nextAction === 'question' ? 'Back to Questions ▶' : 'Continue ▶';
+}
+
+function renderLeaderboard(listId) {
+  const players = gameData.players || {};
+  const sorted = Object.entries(players).sort((a,b) => (b[1].score||0) - (a[1].score||0));
+  const list = document.getElementById(listId);
+  list.innerHTML = '';
+  sorted.forEach(([pid, p], i) => {
+    const av = getAvatar(p.avatar);
+    const li = document.createElement('li');
+    li.className = 'lb-item';
+    li.style.animationDelay = (i * 0.08) + 's';
+    li.innerHTML = `<div class="lb-rank">${['🥇','🥈','🥉'][i] || (i+1)}</div>
+      ${renderAvatarBadge(av, 40)}
+      <div class="lb-info flex-col gap-4">
+        <div style="font-weight:700">${escHtml(p.name)}</div>
+      </div>
+      <div class="lb-score">${p.score || 0} pts</div>`;
+    list.appendChild(li);
+  });
+}
+
+function lbContinue() {
+  const a = _lbNextAction;
+  if (!a) return;
+  if (a.action === 'before-connection') {
+    showConnIntro();
+  } else if (a.action === 'question') {
+    showQuestionScreen(a.nextQIdx);
+  }
+}
+
+// ── CONNECTION INTRO ──
+function showConnIntro() {
+  tuesdayPlayerId = null;
+  showScreen('conn-intro');
+  document.getElementById('btn-start-conn').disabled = true;
+  renderConnPlayerPicker();
+}
+
+function renderConnPlayerPicker() {
+  const players = gameData.players || {};
+  const grid = document.getElementById('conn-player-grid');
+  grid.innerHTML = '';
+  Object.entries(players).forEach(([pid, p]) => {
+    const av = getAvatar(p.avatar);
+    const div = document.createElement('div');
+    div.className = 'p-card' + (pid === tuesdayPlayerId ? ' tuesday-card' : '');
+    div.style.cursor = 'pointer';
+    div.innerHTML = (pid === tuesdayPlayerId ? '<div class="tuesday-crown">👑</div>' : '') +
+      renderAvatarBadge(av, 52) + `<div class="p-name">${escHtml(p.name)}</div>`;
+    div.addEventListener('click', () => {
+      tuesdayPlayerId = pid;
+      gameRef.update({ tuesdayId: pid });
+      document.getElementById('btn-start-conn').disabled = false;
+      document.getElementById('tuesday-pick-hint').textContent = `✅ ${p.name} marked as Tuesday!`;
+      renderConnPlayerPicker();
+    });
+    grid.appendChild(div);
+  });
+}
+
+// ── START CONNECTION ROUND ──
+async function startConnectionRound() {
+  audio.init();
+  connCurrentQ = 0;
+  await gameRef.update({ status: 'connection', connCurrentQ: 0, tuesdayId: tuesdayPlayerId, timerEnd: Date.now() + TIMER_SECS * 1000 });
+  showConnectionQuestion(0);
+}
+
+// ── CONNECTION QUESTION ──
+function showConnectionQuestion(cIdx) {
+  const q = CONNECTION_QUESTIONS[cIdx];
+  showScreen('conn-q');
+  document.getElementById('conn-num-label').textContent = `Connection Question ${cIdx + 1} of ${CONNECTION_QUESTIONS.length}`;
+  document.getElementById('conn-q-text').textContent = q.text;
+  document.getElementById('conn-progress').style.width = ((cIdx + 1) / CONNECTION_QUESTIONS.length * 100) + '%';
+  renderConnOptions(q, 'conn-options-wrap', false);
+  startTimer(TIMER_SECS, 'timer-ring-conn', 'timer-num-conn', 'timer-wrap-conn');
+  gameRef.update({ connCurrentQ: cIdx, timerEnd: Date.now() + TIMER_SECS * 1000 });
+}
+
+function renderConnOptions(q, wrapperId, revealed, tuesdayAns) {
+  const wrap = document.getElementById(wrapperId);
+  wrap.innerHTML = '';
+  const grid = document.createElement('div');
+  grid.className = 'answer-grid';
+  q.options.forEach((opt, i) => {
+    const div = document.createElement('div');
+    div.className = 'answer-opt';
+    if (revealed) {
+      if (i === tuesdayAns) div.classList.add('correct');
+      else div.classList.add('wrong');
+    }
+    div.dataset.letter = LETTERS[i];
+    div.innerHTML = `<div class="letter">${LETTERS[i]}</div><div>${opt}</div>`;
+    grid.appendChild(div);
+  });
+  wrap.appendChild(grid);
+}
+
+// ── REVEAL CONNECTION ──
+function revealConnectionAnswer() {
+  stopTimer();
+  const cIdx = connCurrentQ;
+  const q = CONNECTION_QUESTIONS[cIdx];
+  const players = gameData.players || {};
+  const tuesdayId = gameData.tuesdayId || tuesdayPlayerId;
+
+  // Get Tuesday's actual answer
+  const tuesdayPlayer = players[tuesdayId];
+  const tuesdayAns = tuesdayPlayer && tuesdayPlayer.connAnswers && tuesdayPlayer.connAnswers[cIdx] !== undefined
+    ? parseInt(tuesdayPlayer.connAnswers[cIdx])
+    : q.tuesdayAnswer; // fallback to preset
+
+  gameRef.update({ status: 'connection_reveal', [`tuesdayAnswers/${cIdx}`]: tuesdayAns });
+
+  showScreen('conn-reveal');
+  document.getElementById('conn-rev-q-text').textContent = q.text;
+  renderConnOptions(q, 'conn-rev-options-wrap', true, tuesdayAns);
+  document.getElementById('conn-tuesday-said').textContent = `"${q.options[tuesdayAns]}"`;
+
+  // Update connection scores and show results
+  const updates = {};
+  const resultGrid = document.getElementById('conn-player-results');
+  resultGrid.innerHTML = '';
+
+  Object.entries(players).forEach(([pid, p]) => {
+    if (pid === tuesdayId) return; // skip Tuesday herself
+    const ans = p.connAnswers && p.connAnswers[cIdx] !== undefined ? parseInt(p.connAnswers[cIdx]) : -1;
+    const matched = ans === tuesdayAns;
+    if (matched) {
+      updates[`players/${pid}/connectionScore`] = (p.connectionScore || 0) + 1;
+    }
+    const av = getAvatar(p.avatar);
+    const div = document.createElement('div');
+    div.className = 'p-card';
+    div.style.borderColor = matched ? '#ffcc00' : 'rgba(255,255,255,.15)';
+    div.style.background = matched ? 'rgba(255,204,0,.12)' : '';
+    div.innerHTML = renderAvatarBadge(av, 44) +
+      `<div class="p-name">${escHtml(p.name)}</div>` +
+      `<div style="font-size:.8rem">${matched ? '💛 Match!' : (ans >= 0 ? '❌' : '–')}</div>`;
+    resultGrid.appendChild(div);
+  });
+
+  if (Object.keys(updates).length) gameRef.update(updates);
+  if (soundEnabled) { audio.init(); audio.connectionReveal(); }
+}
+
+// ── NEXT CONNECTION QUESTION ──
+async function nextConnectionQuestion() {
+  const next = connCurrentQ + 1;
+  if (next >= CONNECTION_QUESTIONS.length) {
+    showFinalResults();
+    return;
+  }
+  connCurrentQ = next;
+  await gameRef.update({ status: 'connection', connCurrentQ: next });
+  showConnectionQuestion(next);
+}
+
+// ── FINAL RESULTS ──
+function showFinalResults() {
+  gameRef.update({ status: 'final' });
+  showScreen('final');
+  renderLeaderboard('final-lb-list');
+
+  const players = gameData.players || {};
+  const tuesdayId = gameData.tuesdayId || tuesdayPlayerId;
+  const others = Object.entries(players).filter(([pid]) => pid !== tuesdayId);
+  const connSorted = others.sort((a,b) => (b[1].connectionScore||0) - (a[1].connectionScore||0));
+
+  const cList = document.getElementById('conn-lb-list');
+  cList.innerHTML = '';
+  connSorted.forEach(([pid, p], i) => {
+    const av = getAvatar(p.avatar);
+    const li = document.createElement('li');
+    li.className = 'lb-item';
+    li.style.animationDelay = (i * 0.08) + 's';
+    const dots = Array.from({length:5},(_, di) => `<div class="conn-dot${di < (p.connectionScore||0) ? ' match' : ''}"></div>`).join('');
+    li.innerHTML = `<div class="lb-rank">${['🥇','🥈','🥉'][i] || (i+1)}</div>
+      ${renderAvatarBadge(av, 40)}
+      <div class="lb-info flex-col gap-6">
+        <div style="font-weight:700">${escHtml(p.name)}</div>
+        <div style="display:flex;gap:4px">${dots}</div>
+      </div>
+      <div class="lb-score" style="color:#ffcc00">${p.connectionScore||0}/5 💛</div>`;
+    cList.appendChild(li);
+  });
+
+  if (soundEnabled) { audio.init(); audio.fanfare(); setTimeout(()=>audio.crowd(),500); }
+  spawnConfetti(60);
+}
+
+// ── CONFETTI ──
+function spawnConfetti(count) {
+  const colors = ['#ff0050','#ff6600','#ffcc00','#33ff99','#0099ff','#cc00ff','#ff66ff'];
+  const container = document.createElement('div');
+  container.className = 'confetti';
+  document.body.appendChild(container);
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    const size = 6 + Math.random() * 10;
+    p.className = 'cf';
+    p.style.cssText = `left:${Math.random()*100}%;width:${size}px;height:${size}px;background:${colors[Math.floor(Math.random()*colors.length)]};animation-duration:${2+Math.random()*2}s;animation-delay:${Math.random()*.8}s;border-radius:${Math.random()>.5?'50%':'2px'}`;
+    container.appendChild(p);
+  }
+  setTimeout(() => container.remove(), 4000);
+}
+
+// ── UTILS ──
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── BOOT ──
+window.addEventListener('DOMContentLoaded', init);
+</script>
+</body>
+</html>

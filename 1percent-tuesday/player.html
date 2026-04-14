@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Join · The 1% of Tuesday Club</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { overflow: auto; }
+    #app { height: auto; min-height: 100vh; }
+    .screen { min-height: 100vh; overflow-y: auto; padding: 24px 20px; }
+    .mob-title { font-size: 1.3rem; font-weight: 900; text-align: center; line-height: 1.2; }
+    .mob-subtitle { font-size: .85rem; color: rgba(255,255,255,.5); text-align: center; }
+    .score-badge { background: rgba(255,204,0,.15); border: 1px solid rgba(255,204,0,.3); border-radius: 12px; padding: 8px 16px; font-size: 1rem; font-weight: 800; color: #ffcc00; text-align: center; }
+    .result-big { font-size: 3rem; text-align: center; animation: scorePop .4s ease; }
+    .mob-timer { height: 6px; border-radius: 3px; background: rgba(255,255,255,.1); overflow: hidden; }
+    .mob-timer-fill { height: 100%; border-radius: 3px; background: linear-gradient(90deg,#33ff99,#0099ff); transition: width 1s linear; }
+    .mob-timer-fill.urgent { background: #ff0055; }
+    .conn-badge { background: linear-gradient(135deg,rgba(255,204,0,.2),rgba(255,136,0,.1)); border: 1px solid rgba(255,204,0,.3); border-radius: 14px; padding: 12px 16px; text-align:center; }
+    .tuesday-badge { background: rgba(255,204,0,.12); border: 2px solid #ffcc00; border-radius: 16px; padding: 16px; text-align:center; }
+  </style>
+</head>
+<body>
+<div id="starfield"></div>
+<div id="app">
+
+  <!-- ── JOIN ── -->
+  <div id="screen-join" class="screen flex-col flex-center gap-20">
+    <div class="mob-title">
+      <span style="color:#fff">The 1% of </span><span class="rainbow-text">Tuesday</span><span style="color:#fff"> Club</span>
+    </div>
+    <div class="glass flex-col gap-16" style="padding:24px;width:100%;max-width:400px">
+      <div class="flex-col gap-8">
+        <div class="section-label">Room Code</div>
+        <input type="text" id="inp-code" placeholder="e.g. AB3Z" maxlength="4" style="text-transform:uppercase;font-size:1.6rem;letter-spacing:.2em;text-align:center;font-family:monospace">
+      </div>
+      <div class="flex-col gap-8">
+        <div class="section-label">Your Name</div>
+        <input type="text" id="inp-name" placeholder="What's your name?" maxlength="16">
+      </div>
+      <button class="btn btn-primary btn-lg" id="btn-join">Join Game ✨</button>
+      <div id="join-error" style="color:#ff6677;font-size:.85rem;text-align:center;display:none"></div>
+    </div>
+  </div>
+
+  <!-- ── AVATAR SELECT ── -->
+  <div id="screen-avatar" class="screen flex-col gap-16">
+    <div class="mob-title">Pick your avatar ✨</div>
+    <div class="mob-subtitle">This is how you'll appear in the game</div>
+    <div class="avatar-grid" id="avatar-grid"></div>
+    <button class="btn btn-primary btn-lg" id="btn-confirm-avatar" disabled>Let's Go! 🚀</button>
+  </div>
+
+  <!-- ── LOBBY WAIT ── -->
+  <div id="screen-lobby-wait" class="screen flex-col flex-center gap-20 text-center">
+    <div id="lw-avatar" class="waiting-avatar"></div>
+    <div class="flex-col gap-8 flex-center">
+      <div class="mob-title" id="lw-name"></div>
+      <div class="mob-subtitle">Waiting for the host to start…</div>
+    </div>
+    <div class="glass" style="padding:16px 24px">
+      <div class="section-label">Room</div>
+      <div style="font-size:2rem;font-weight:900;letter-spacing:.2em;font-family:monospace" id="lw-code"></div>
+    </div>
+    <div id="lw-players" class="flex-row flex-wrap gap-8 flex-center" style="max-width:340px"></div>
+  </div>
+
+  <!-- ── QUESTION ── -->
+  <div id="screen-question" class="screen flex-col gap-14">
+    <div class="flex-row" style="justify-content:space-between;align-items:center;gap:10px;flex-shrink:0">
+      <div class="flex-col gap-4">
+        <div class="section-label" id="p-q-num"></div>
+        <div class="diff-badge" id="p-diff-badge" style="width:56px;height:56px;font-size:.75rem"></div>
+      </div>
+      <div class="score-badge" id="p-score-display">0 pts</div>
+    </div>
+    <div class="mob-timer"><div class="mob-timer-fill" id="p-timer-fill"></div></div>
+    <div style="font-weight:700;font-size:1.05rem;line-height:1.45;flex-shrink:0" id="p-q-text"></div>
+    <div id="p-pic-wrap" style="display:none">
+      <div class="pic-grid" id="p-pic-grid"></div>
+    </div>
+    <div class="mob-answers" id="p-answers"></div>
+    <div id="p-answered-msg" style="display:none" class="glass text-center" style="padding:16px">
+      <div style="font-size:1.5rem">⏳</div>
+      <div style="font-size:.9rem;color:rgba(255,255,255,.6);margin-top:4px">Answer locked in! Waiting for others…</div>
+    </div>
+  </div>
+
+  <!-- ── REVEAL ── -->
+  <div id="screen-reveal" class="screen flex-col flex-center gap-20">
+    <div class="result-big" id="rev-emoji"></div>
+    <div class="flex-col gap-8 flex-center">
+      <div style="font-size:1.2rem;font-weight:700;text-align:center" id="rev-result-text"></div>
+      <div class="mob-subtitle" id="rev-correct-ans"></div>
+    </div>
+    <div class="score-badge" style="font-size:1.3rem" id="rev-score"></div>
+    <div class="mob-subtitle text-center">Host will advance when ready…</div>
+  </div>
+
+  <!-- ── LEADERBOARD WAIT ── -->
+  <div id="screen-lb-wait" class="screen flex-col flex-center gap-16 text-center">
+    <div style="font-size:2.5rem">🏆</div>
+    <div class="mob-title">Leaderboard time!</div>
+    <div class="score-badge" style="font-size:1.3rem" id="lb-my-score"></div>
+    <div class="mob-subtitle">Host is showing the leaderboard…</div>
+  </div>
+
+  <!-- ── CONNECTION WAIT ── -->
+  <div id="screen-conn-wait" class="screen flex-col flex-center gap-16 text-center">
+    <div style="font-size:3rem">💛</div>
+    <div class="mob-title">Connection Round!</div>
+    <div class="conn-badge" style="max-width:320px">
+      <div style="font-size:.9rem;color:rgba(255,255,255,.7);line-height:1.6">
+        Answer what you think <strong style="color:#ffcc00">Tuesday would say</strong>.<br>
+        The person who matches her most wins!
+      </div>
+    </div>
+    <div id="conn-tuesday-badge" style="display:none" class="tuesday-badge">
+      <div style="font-size:2rem">👑</div>
+      <div style="font-weight:800;color:#ffcc00;margin-top:6px">You're Tuesday!</div>
+      <div style="font-size:.85rem;color:rgba(255,255,255,.6);margin-top:4px">Answer honestly — everyone is trying to match you!</div>
+    </div>
+    <div class="mob-subtitle">Waiting for host…</div>
+  </div>
+
+  <!-- ── CONNECTION QUESTION ── -->
+  <div id="screen-conn-q" class="screen flex-col gap-14">
+    <div class="flex-row" style="justify-content:space-between;align-items:center;flex-shrink:0">
+      <div class="conn-badge" style="padding:8px 14px">
+        <span style="font-size:.8rem;font-weight:700">💛 Connection</span>
+      </div>
+      <div class="section-label" id="cq-num-label"></div>
+    </div>
+    <div class="mob-timer"><div class="mob-timer-fill" id="cq-timer-fill"></div></div>
+    <div id="cq-tuesday-hint" style="display:none" class="tuesday-badge" style="flex-shrink:0">
+      <div style="font-size:.85rem;color:rgba(255,255,255,.7)">You're Tuesday — answer honestly! 💛</div>
+    </div>
+    <div style="font-weight:700;font-size:1.05rem;line-height:1.45;flex-shrink:0" id="cq-text"></div>
+    <div class="mob-answers" id="cq-answers"></div>
+    <div id="cq-answered-msg" style="display:none" class="glass text-center" style="padding:16px">
+      <div style="font-size:1.5rem">⏳</div>
+      <div style="font-size:.9rem;color:rgba(255,255,255,.6);margin-top:4px">Locked in! Waiting for others…</div>
+    </div>
+  </div>
+
+  <!-- ── CONNECTION REVEAL WAIT ── -->
+  <div id="screen-conn-rev-wait" class="screen flex-col flex-center gap-16 text-center">
+    <div style="font-size:3rem">✨</div>
+    <div class="mob-title">Tuesday's answer revealed!</div>
+    <div class="mob-subtitle">Host is showing who matched…</div>
+  </div>
+
+  <!-- ── FINAL ── -->
+  <div id="screen-final" class="screen flex-col flex-center gap-20 text-center">
+    <div style="font-size:3rem">🎉</div>
+    <div class="mob-title"><span style="color:#fff">Happy </span><span class="rainbow-text">Birthday</span><span style="color:#fff"> Tuesday!</span></div>
+    <div class="glass flex-col gap-12" style="padding:20px;width:100%;max-width:360px">
+      <div class="section-label">Your final score</div>
+      <div class="score-badge" style="font-size:1.6rem" id="final-score"></div>
+      <div id="final-conn-wrap" style="display:none">
+        <div class="section-label" style="margin-top:8px">Connection Score</div>
+        <div style="display:flex;gap:6px;justify-content:center;margin-top:8px" id="final-conn-dots"></div>
+        <div class="score-badge" style="margin-top:8px;color:#ffcc00;font-size:1.1rem" id="final-conn-score"></div>
+      </div>
+    </div>
+    <div class="mob-subtitle">Thanks for playing! 🌈</div>
+  </div>
+
+</div><!-- #app -->
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="questions.js"></script>
+<script src="avatars.js"></script>
+<script src="audio.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+// ── STARFIELD ──
+(function(){
+  const sf=document.getElementById('starfield');
+  for(let i=0;i<80;i++){const s=document.createElement('div');const sz=Math.random()*2+.5;s.className='star';s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;width:${sz}px;height:${sz}px;--dur:${2+Math.random()*5}s;--delay:${Math.random()*5}s;--op:${.15+Math.random()*.6}`;sf.appendChild(s);}
+})();
+
+// ── STATE ──
+const LETTERS = ['A','B','C','D'];
+let roomCode = '';
+let playerId = '';
+let playerName = '';
+let chosenAvatar = null;
+let gameRef = null;
+let playerRef = null;
+let gameData = {};
+let timerInterval = null;
+let lastStatus = '';
+let myScore = 0;
+let myConnScore = 0;
+let isTuesday = false;
+let currentAnswer = null;
+let currentConnAnswer = null;
+let audioInited = false;
+
+function tryInitAudio() {
+  if (!audioInited) { audio.init(); audio.enabled = true; audioInited = true; }
+}
+
+// ── SCREENS ──
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  const el = document.getElementById('screen-' + id);
+  if (el) el.classList.add('active');
+}
+
+// ── JOIN ──
+document.getElementById('btn-join').addEventListener('click', async () => {
+  tryInitAudio();
+  const code = document.getElementById('inp-code').value.trim().toUpperCase();
+  const name = document.getElementById('inp-name').value.trim();
+  const errEl = document.getElementById('join-error');
+  errEl.style.display = 'none';
+
+  if (code.length !== 4) { showErr('Enter the 4-letter room code'); return; }
+  if (!name) { showErr('Enter your name'); return; }
+
+  // Check room exists
+  const snap = await db.ref('rooms/' + code).once('value');
+  if (!snap.exists()) { showErr('Room not found — check the code'); return; }
+  if (snap.val().status !== 'lobby') { showErr('Game has already started'); return; }
+
+  roomCode = code;
+  playerName = name;
+  playerId = db.ref('rooms/' + code + '/players').push().key;
+
+  showScreen('avatar');
+  renderAvatarPicker();
+});
+
+function showErr(msg) {
+  const el = document.getElementById('join-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+// ── AVATAR ──
+function renderAvatarPicker() {
+  const grid = document.getElementById('avatar-grid');
+  grid.innerHTML = '';
+  AVATARS.forEach(av => {
+    const div = document.createElement('div');
+    div.className = 'av-pick';
+    div.innerHTML = `<div class="av-emoji">${av.emoji}</div><div class="av-name">${av.name}</div>`;
+    div.addEventListener('click', () => {
+      chosenAvatar = av.id;
+      document.querySelectorAll('.av-pick').forEach(d => d.classList.remove('chosen'));
+      div.classList.add('chosen');
+      document.getElementById('btn-confirm-avatar').disabled = false;
+    });
+    grid.appendChild(div);
+  });
+}
+
+document.getElementById('btn-confirm-avatar').addEventListener('click', async () => {
+  tryInitAudio();
+  gameRef = db.ref('rooms/' + roomCode);
+  playerRef = gameRef.child('players/' + playerId);
+
+  await playerRef.set({
+    name: playerName,
+    avatar: chosenAvatar,
+    score: 0,
+    connectionScore: 0,
+    connected: true,
+    answers: {},
+    connAnswers: {}
+  });
+
+  // Remove player on disconnect
+  playerRef.child('connected').onDisconnect().set(false);
+
+  // Listen to game state
+  gameRef.on('value', snap => {
+    gameData = snap.val() || {};
+    onGameUpdate();
+  });
+
+  document.getElementById('lw-code').textContent = roomCode;
+  document.getElementById('lw-name').textContent = playerName;
+  document.getElementById('lw-avatar').innerHTML = renderAvatarBadge(chosenAvatar, 80);
+  showScreen('lobby-wait');
+});
+
+// ── GAME UPDATE ──
+function onGameUpdate() {
+  const status = gameData.status || 'lobby';
+  const players = gameData.players || {};
+  const me = players[playerId] || {};
+
+  myScore = me.score || 0;
+  myConnScore = me.connectionScore || 0;
+  isTuesday = gameData.tuesdayId === playerId;
+
+  // Update lobby player list
+  if (status === 'lobby') {
+    const lwP = document.getElementById('lw-players');
+    if (lwP) {
+      lwP.innerHTML = '';
+      Object.entries(players).forEach(([pid, p]) => {
+        const av = getAvatar(p.avatar);
+        const span = document.createElement('div');
+        span.innerHTML = renderAvatarBadge(av, 32);
+        lwP.appendChild(span);
+      });
+    }
+  }
+
+  if (status === lastStatus) return;
+
+  // State transitions
+  if (status === 'question') {
+    const qIdx = gameData.currentQuestion || 0;
+    currentAnswer = null;
+    showQuestionScreen(qIdx);
+    lastStatus = status + '_' + qIdx;
+    return;
+  }
+
+  if (status === 'reveal') {
+    showRevealScreen();
+    lastStatus = status;
+    return;
+  }
+
+  if (status === 'leaderboard') {
+    document.getElementById('lb-my-score').textContent = myScore + ' pts';
+    showScreen('lb-wait');
+    lastStatus = status;
+    return;
+  }
+
+  if (status === 'connection' && lastStatus !== 'conn-wait' && !lastStatus.startsWith('conn-q')) {
+    // Show connection wait / intro
+    document.getElementById('conn-tuesday-badge').style.display = isTuesday ? 'block' : 'none';
+    showScreen('conn-wait');
+    lastStatus = 'conn-wait';
+    return;
+  }
+
+  if (status === 'connection') {
+    const cIdx = gameData.connCurrentQ || 0;
+    const myPrevAns = (gameData.players?.[playerId]?.connAnswers?.[cIdx]);
+    if (myPrevAns !== undefined && lastStatus === 'conn-q_' + cIdx) return;
+    currentConnAnswer = null;
+    showConnectionQuestion(cIdx);
+    lastStatus = 'conn-q_' + cIdx;
+    return;
+  }
+
+  if (status === 'connection_reveal') {
+    showScreen('conn-rev-wait');
+    lastStatus = status;
+    return;
+  }
+
+  if (status === 'final') {
+    showFinalScreen();
+    lastStatus = status;
+    return;
+  }
+
+  lastStatus = status;
+}
+
+// ── QUESTION SCREEN ──
+function showQuestionScreen(qIdx) {
+  const q = QUESTIONS[qIdx];
+  showScreen('question');
+  document.getElementById('p-q-num').textContent = `Q${qIdx + 1} of ${QUESTIONS.length}`;
+  document.getElementById('p-diff-badge').className = 'diff-badge diff-' + q.difficulty;
+  document.getElementById('p-diff-badge').textContent = q.difficultyLabel;
+  document.getElementById('p-score-display').textContent = myScore + ' pts';
+  document.getElementById('p-q-text').textContent = q.text;
+  document.getElementById('p-answered-msg').style.display = 'none';
+
+  const picWrap = document.getElementById('p-pic-wrap');
+  const picGrid = document.getElementById('p-pic-grid');
+  if (q.type === 'picture') {
+    picWrap.style.display = 'block';
+    picGrid.innerHTML = '';
+    q.pictureIcons.forEach((icon, i) => {
+      const d = document.createElement('div');
+      d.className = 'pic-opt';
+      d.style.cursor = 'pointer';
+      d.innerHTML = `<div class="pic-emoji">${icon}</div><div style="font-size:.75rem">${LETTERS[i]}</div>`;
+      d.addEventListener('click', () => submitAnswer(qIdx, i));
+      picGrid.appendChild(d);
+    });
+  } else {
+    picWrap.style.display = 'none';
+  }
+
+  const answersEl = document.getElementById('p-answers');
+  answersEl.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'mob-btn';
+    btn.dataset.letter = LETTERS[i];
+    btn.innerHTML = `<div class="mob-letter">${LETTERS[i]}</div><div>${opt}</div>`;
+    btn.addEventListener('click', () => { tryInitAudio(); submitAnswer(qIdx, i); });
+    answersEl.appendChild(btn);
+  });
+
+  startMobTimer(30, 'p-timer-fill');
+}
+
+function submitAnswer(qIdx, answerIdx) {
+  if (currentAnswer !== null) return;
+  currentAnswer = answerIdx;
+
+  // Highlight selected
+  document.querySelectorAll('#p-answers .mob-btn').forEach((btn, i) => {
+    if (i === answerIdx) btn.classList.add('selected');
+    else btn.classList.add('disabled');
+  });
+  document.querySelectorAll('#p-pic-grid .pic-opt').forEach((el, i) => {
+    if (i === answerIdx) el.style.borderColor = '#ffcc00';
+    else el.style.opacity = '.4';
+  });
+
+  document.getElementById('p-answered-msg').style.display = 'block';
+  playerRef.child('answers/' + qIdx).set(answerIdx);
+  if (audioInited) audio.tick();
+}
+
+// ── REVEAL ──
+function showRevealScreen() {
+  stopMobTimer();
+  const qIdx = gameData.currentQuestion || 0;
+  const q = QUESTIONS[qIdx];
+  const me = gameData.players?.[playerId] || {};
+  const myAns = me.answers?.[qIdx];
+  const correct = myAns !== undefined && parseInt(myAns) === q.correct;
+
+  document.getElementById('rev-emoji').textContent = correct ? '✅' : '❌';
+  document.getElementById('rev-result-text').textContent = correct
+    ? `Correct! +${q.points} pts`
+    : (myAns !== undefined ? 'Not quite!' : 'No answer');
+  document.getElementById('rev-correct-ans').textContent = `Answer: ${q.options[q.correct]}`;
+
+  const newScore = (me.score || 0) + (correct ? q.points : 0);
+  document.getElementById('rev-score').textContent = newScore + ' pts';
+
+  if (audioInited) correct ? audio.correct() : audio.wrong();
+  showScreen('reveal');
+}
+
+// ── CONNECTION QUESTION ──
+function showConnectionQuestion(cIdx) {
+  const q = CONNECTION_QUESTIONS[cIdx];
+  showScreen('conn-q');
+  document.getElementById('cq-num-label').textContent = `${cIdx + 1} of ${CONNECTION_QUESTIONS.length}`;
+  document.getElementById('cq-text').textContent = q.text;
+  document.getElementById('cq-tuesday-hint').style.display = isTuesday ? 'block' : 'none';
+  document.getElementById('cq-answered-msg').style.display = 'none';
+  currentConnAnswer = null;
+
+  const answersEl = document.getElementById('cq-answers');
+  answersEl.innerHTML = '';
+  q.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'mob-btn';
+    btn.dataset.letter = LETTERS[i];
+    btn.innerHTML = `<div class="mob-letter">${LETTERS[i]}</div><div>${opt}</div>`;
+    btn.addEventListener('click', () => { tryInitAudio(); submitConnAnswer(cIdx, i); });
+    answersEl.appendChild(btn);
+  });
+
+  startMobTimer(30, 'cq-timer-fill');
+}
+
+function submitConnAnswer(cIdx, answerIdx) {
+  if (currentConnAnswer !== null) return;
+  currentConnAnswer = answerIdx;
+
+  document.querySelectorAll('#cq-answers .mob-btn').forEach((btn, i) => {
+    if (i === answerIdx) btn.classList.add('selected');
+    else btn.classList.add('disabled');
+  });
+  document.getElementById('cq-answered-msg').style.display = 'block';
+  playerRef.child('connAnswers/' + cIdx).set(answerIdx);
+  if (audioInited) audio.tick();
+}
+
+// ── FINAL SCREEN ──
+function showFinalScreen() {
+  const me = gameData.players?.[playerId] || {};
+  const finalScore = me.score || 0;
+  const connScore = me.connectionScore || 0;
+
+  document.getElementById('final-score').textContent = finalScore + ' pts';
+
+  if (!isTuesday) {
+    const wrapEl = document.getElementById('final-conn-wrap');
+    wrapEl.style.display = 'block';
+    const dotsEl = document.getElementById('final-conn-dots');
+    dotsEl.innerHTML = Array.from({length:5},(_,i) =>
+      `<div class="conn-dot${i < connScore ? ' match' : ''}"></div>`
+    ).join('');
+    document.getElementById('final-conn-score').textContent = `${connScore}/5 matched Tuesday 💛`;
+  }
+
+  showScreen('final');
+}
+
+// ── MOB TIMER ──
+function startMobTimer(secs, fillId) {
+  stopMobTimer();
+  const fill = document.getElementById(fillId);
+  if (!fill) return;
+  fill.style.width = '100%';
+  fill.classList.remove('urgent');
+  let remaining = secs;
+
+  timerInterval = setInterval(() => {
+    remaining--;
+    const pct = Math.max(0, remaining / secs * 100);
+    fill.style.width = pct + '%';
+    if (remaining <= 5) fill.classList.add('urgent');
+    if (remaining <= 0) stopMobTimer();
+  }, 1000);
+}
+
+function stopMobTimer() { clearInterval(timerInterval); }
+
+// ── UTILS ──
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── INPUT HELPERS ──
+document.getElementById('inp-code').addEventListener('input', e => {
+  e.target.value = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'');
+});
+</script>
+</body>
+</html>

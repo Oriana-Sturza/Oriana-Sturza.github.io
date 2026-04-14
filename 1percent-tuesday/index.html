@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>The 1% of Tuesday Club</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body { overflow: auto; }
+    #app { height: auto; min-height: 100vh; align-items: center; justify-content: center; padding: 40px 20px; display: flex; flex-direction: column; gap: 32px; }
+    .card-link { display: block; text-decoration: none; color: inherit; border-radius: 20px; transition: transform .2s ease, box-shadow .2s ease; }
+    .card-link:hover { transform: translateY(-4px); box-shadow: 0 20px 60px rgba(0,0,0,.4); }
+    .route-card { padding: 32px; display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
+    .route-icon { font-size: 3.5rem; }
+    .route-title { font-size: 1.4rem; font-weight: 900; }
+    .route-desc { font-size: .9rem; color: rgba(255,255,255,.55); line-height: 1.5; max-width: 220px; }
+    .cards-row { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 680px; }
+    .host-card { background: linear-gradient(135deg,rgba(255,0,80,.15),rgba(255,102,0,.1)); border: 1px solid rgba(255,100,0,.3); }
+    .join-card { background: linear-gradient(135deg,rgba(0,153,255,.15),rgba(204,0,255,.1)); border: 1px solid rgba(100,0,255,.3); }
+    .cards-row .card-link { flex: 1; min-width: 200px; max-width: 300px; }
+    .subtitle { font-size: .95rem; color: rgba(255,255,255,.45); text-align: center; }
+  </style>
+</head>
+<body>
+  <div id="starfield"></div>
+  <div id="app">
+    <div class="flex-col flex-center gap-12" style="text-align:center">
+      <div class="game-title">
+        <span class="white">The 1% of&nbsp;</span><span class="rainbow-text">Tuesday</span><span class="white">&nbsp;Club</span>
+      </div>
+      <div class="subtitle">A birthday game for someone very special ✨</div>
+    </div>
+
+    <div class="cards-row">
+      <a class="card-link" href="host.html">
+        <div class="route-card glass host-card">
+          <div class="route-icon">📺</div>
+          <div class="route-title">Host the Game</div>
+          <div class="route-desc">Connect to the big screen. Control the questions and reveal the answers.</div>
+        </div>
+      </a>
+      <a class="card-link" href="player.html">
+        <div class="route-card glass join-card">
+          <div class="route-icon">📱</div>
+          <div class="route-title">Join a Game</div>
+          <div class="route-desc">Enter a room code on your phone to play along with everyone else.</div>
+        </div>
+      </a>
+    </div>
+
+    <div class="subtitle" style="font-size:.8rem; max-width:440px">
+      Host opens the game on a TV or laptop · Players join on their phones · Just like Jackbox 🎮
+    </div>
+  </div>
+
+  <script>
+    const sf = document.getElementById('starfield');
+    for (let i = 0; i < 120; i++) {
+      const s = document.createElement('div');
+      const sz = Math.random() * 2.5 + .5;
+      s.className = 'star';
+      s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;width:${sz}px;height:${sz}px;--dur:${2+Math.random()*5}s;--delay:${Math.random()*5}s;--op:${.2+Math.random()*.7}`;
+      sf.appendChild(s);
+    }
+  </script>
+</body>
+</html>
