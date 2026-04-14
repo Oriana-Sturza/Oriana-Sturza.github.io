@@ -1,28 +1,12 @@
-// ============================================================
-//  FIREBASE SETUP — fill in your config below!
-//
-//  Steps:
-//  1. Go to https://console.firebase.google.com
-//  2. Click "Add project" → name it "tuesday-game"
-//  3. Disable Google Analytics if asked (not needed) → Create project
-//  4. Click "Build" → "Realtime Database" → "Create database"
-//  5. Choose "Start in test mode" → Enable
-//  6. Go to Project Settings (gear icon) → "Your apps" → click </>
-//  7. Register app (any nickname) → copy the firebaseConfig object
-//  8. Paste the values below replacing each "YOUR_..." placeholder
-//
-//  That's it! The game will work for 30 days in test mode.
-//  (Extend rules at any time in the Firebase console)
-// ============================================================
-
+// Firebase config for The 1% of Tuesday Club
 const firebaseConfig = {
-  apiKey:            "YOUR_API_KEY",
-  authDomain:        "YOUR_PROJECT_ID.firebaseapp.com",
-  databaseURL:       "YOUR_DATABASE_URL",   // ends in .firebasedatabase.app
-  projectId:         "YOUR_PROJECT_ID",
-  storageBucket:     "YOUR_PROJECT_ID.appspot.com",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId:             "YOUR_APP_ID"
+  apiKey:            "AIzaSyCGBOhq4DYEIXn982RF-ZlHs5KAOR-T1us",
+  authDomain:        "tuesday-game-5a38c.firebaseapp.com",
+  databaseURL:       "https://tuesday-game-5a38c-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId:         "tuesday-game-5a38c",
+  storageBucket:     "tuesday-game-5a38c.firebasestorage.app",
+  messagingSenderId: "776278448672",
+  appId:             "1:776278448672:web:282952cba5d234034ffa45"
 };
 
 firebase.initializeApp(firebaseConfig);
