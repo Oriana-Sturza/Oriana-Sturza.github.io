@@ -8,7 +8,7 @@
   <style>
     body { overflow: auto; }
     #app { height: auto; min-height: 100vh; }
-    .screen { min-height: 100vh; overflow-y: auto; padding: 24px 20px; }
+    .screen { display: none; min-height: 100vh; overflow-y: auto; padding: 24px 20px; }
     .mob-title { font-size: 1.3rem; font-weight: 900; text-align: center; line-height: 1.2; }
     .mob-subtitle { font-size: .85rem; color: rgba(255,255,255,.5); text-align: center; }
     .score-badge { background: rgba(255,204,0,.15); border: 1px solid rgba(255,204,0,.3); border-radius: 12px; padding: 8px 16px; font-size: 1rem; font-weight: 800; color: #ffcc00; text-align: center; }
@@ -222,9 +222,14 @@ document.getElementById('btn-join').addEventListener('click', async () => {
   if (!name) { showErr('Enter your name'); return; }
 
   // Check room exists
-  const snap = await db.ref('rooms/' + code).once('value');
-  if (!snap.exists()) { showErr('Room not found — check the code'); return; }
-  if (snap.val().status !== 'lobby') { showErr('Game has already started'); return; }
+  let snap;
+  try {
+    snap = await db.ref('rooms/' + code).once('value');
+  } catch(e) {
+    showErr('Could not connect — check your internet and try again'); return;
+  }
+  if (!snap.exists()) { showErr('Room not found — double-check the code on screen'); return; }
+  if (snap.val().status !== 'lobby') { showErr('This game has already started'); return; }
 
   roomCode = code;
   playerName = name;
@@ -534,6 +539,9 @@ function stopMobTimer() { clearInterval(timerInterval); }
 function escHtml(s) {
   return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
+
+// ── BOOT ──
+showScreen('join');
 
 // ── INPUT HELPERS ──
 document.getElementById('inp-code').addEventListener('input', e => {

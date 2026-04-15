@@ -11,7 +11,7 @@
     .q-header { display:flex; align-items:center; gap:16px; flex-shrink:0; margin-bottom:12px; }
     .q-num { font-size:.9rem; color:rgba(255,255,255,.5); font-weight:600; }
     .answer-tally { font-size:.9rem; color:#33ff99; font-weight:700; }
-    .screen { padding:16px 20px; }
+    .screen { display:none; padding:16px 20px; }
     #screen-lobby { justify-content:center; }
     #screen-final { overflow-y:auto; }
     .select-tuesday-hint { font-size:.85rem; color:#ffcc00; text-align:center; background:rgba(255,204,0,.1); border:1px solid rgba(255,204,0,.25); border-radius:10px; padding:10px 16px; }
@@ -334,6 +334,7 @@ function showQuestionScreen(qIdx) {
   renderOptions(q, 'q-options-wrap', false);
   startTimer(TIMER_SECS, 'timer-ring', 'timer-num', 'timer-wrap');
   gameRef.update({ status: 'question', currentQuestion: qIdx, timerEnd: Date.now() + TIMER_SECS * 1000 });
+  if (soundEnabled) { audio.init(); audio.questionStab(); setTimeout(() => audio.startBeat(), 300); }
 }
 
 // ── RENDER OPTIONS ──
@@ -392,6 +393,7 @@ function stopTimer() { clearInterval(timerInterval); }
 // ── REVEAL ──
 function revealAnswer() {
   stopTimer();
+  audio.stopBeat();
   const qIdx = gameData.currentQuestion || 0;
   const q = QUESTIONS[qIdx];
   const players = gameData.players || {};
@@ -556,6 +558,7 @@ function showConnectionQuestion(cIdx) {
   renderConnOptions(q, 'conn-options-wrap', false);
   startTimer(TIMER_SECS, 'timer-ring-conn', 'timer-num-conn', 'timer-wrap-conn');
   gameRef.update({ connCurrentQ: cIdx, timerEnd: Date.now() + TIMER_SECS * 1000 });
+  if (soundEnabled) { audio.init(); audio.questionStab(); setTimeout(() => audio.startBeat(), 300); }
 }
 
 function renderConnOptions(q, wrapperId, revealed, tuesdayAns) {
@@ -580,6 +583,7 @@ function renderConnOptions(q, wrapperId, revealed, tuesdayAns) {
 // ── REVEAL CONNECTION ──
 function revealConnectionAnswer() {
   stopTimer();
+  audio.stopBeat();
   const cIdx = connCurrentQ;
   const q = CONNECTION_QUESTIONS[cIdx];
   const players = gameData.players || {};
