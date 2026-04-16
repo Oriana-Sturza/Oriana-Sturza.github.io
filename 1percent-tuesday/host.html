@@ -171,6 +171,44 @@
     </div>
   </div>
 
+  <!-- ── TIEBREAKER QUESTION ── -->
+  <div id="screen-tiebreaker-q" class="screen flex-col gap-12">
+    <div class="top-bar">
+      <div style="font-size:1.1rem;font-weight:800">⚡ Tiebreaker!</div>
+      <div class="flex-row gap-16 flex-center">
+        <div class="answer-tally" id="tb-tally">0 / 0 answered</div>
+        <div class="timer-wrap" id="timer-wrap-tb">
+          <svg viewBox="0 0 90 90"><circle class="timer-track" cx="45" cy="45" r="38"/><circle class="timer-fill" id="timer-ring-tb" cx="45" cy="45" r="38" stroke-dasharray="238.76" stroke-dashoffset="0"/></svg>
+          <div class="timer-num" id="timer-num-tb">40</div>
+        </div>
+      </div>
+    </div>
+    <div class="q-card flex-col gap-16" style="flex:1">
+      <div style="background:rgba(255,204,0,.12);border:2px solid rgba(255,204,0,.4);border-radius:14px;padding:12px 18px;font-size:.9rem;color:#ffcc00;text-align:center">
+        ⚡ Sudden death — closest guess wins! Tied on closeness? Fastest answer takes it.
+      </div>
+      <div id="tb-tied-players" style="font-size:.85rem;color:rgba(255,255,255,.5);text-align:center"></div>
+      <div class="q-text" id="tb-q-text" style="white-space:pre-line;text-align:center;font-size:1.3rem"></div>
+      <div class="typing-indicator">📱 Tied players are entering their guesses…</div>
+    </div>
+    <div class="host-controls">
+      <button class="btn btn-danger" id="btn-tb-reveal">Reveal Result ⚡</button>
+    </div>
+  </div>
+
+  <!-- ── TIEBREAKER RESULT ── -->
+  <div id="screen-tiebreaker-result" class="screen flex-col gap-16" style="overflow-y:auto">
+    <div class="game-title text-center"><span class="white">Tiebreaker </span><span class="rainbow-text">Result</span><span class="white"> ⚡</span></div>
+    <div style="background:rgba(51,255,153,.15);border:3px solid #33ff99;border-radius:16px;padding:16px 24px;text-align:center;max-width:500px;margin:0 auto;width:100%">
+      <div style="font-size:.8rem;color:#33ff99;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">The Answer Was</div>
+      <div style="font-size:2.2rem;font-weight:900;color:#33ff99">19 mice 🐭</div>
+    </div>
+    <ol class="lb-list" id="tb-results-list" style="max-width:600px;width:100%;margin:0 auto"></ol>
+    <div class="text-center" style="padding-bottom:20px">
+      <button class="btn btn-ghost" onclick="showScreen('final')">Back to Final Results</button>
+    </div>
+  </div>
+
   <!-- ── FINAL ── -->
   <div id="screen-final" class="screen flex-col gap-16" style="overflow-y:auto">
     <div class="game-title text-center"><span class="white">Happy </span><span class="rainbow-text">Birthday Tuesday</span><span class="white">! 🎉</span></div>
@@ -184,7 +222,8 @@
         <ol class="lb-list" id="conn-lb-list" style="max-width:100%"></ol>
       </div>
     </div>
-    <div class="text-center" style="padding-bottom:20px">
+    <div class="text-center flex-col gap-12 flex-center" style="padding-bottom:20px">
+      <button class="btn btn-danger" id="btn-tiebreaker" style="display:none">⚡ Run Tiebreaker</button>
       <button class="btn btn-ghost" onclick="window.location.href='host.html'">Play Again 🔄</button>
     </div>
   </div>
@@ -217,7 +256,7 @@ let tuesdayPlayerId = null;
 let connCurrentQ = 0;
 
 // ── SCREENS ──
-const BRIGHT_SCREENS = ['question', 'reveal', 'conn-q', 'conn-reveal'];
+const BRIGHT_SCREENS = ['question', 'reveal', 'conn-q', 'conn-reveal', 'tiebreaker-q', 'tiebreaker-result'];
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById('screen-' + id);
@@ -306,6 +345,14 @@ function onGameUpdate() {
     const answered = pList.filter(p => p.connAnswers && p.connAnswers[cIdx] !== undefined).length;
     const el = document.getElementById('conn-tally');
     if (el) el.textContent = `${answered} / ${pList.length} answered`;
+  }
+
+  if (gameData.status === 'tiebreaker') {
+    const tbPlayers = gameData.tiebreakerPlayers || {};
+    const tbIds = Object.keys(tbPlayers);
+    const answered = tbIds.filter(pid => players[pid]?.tbAnswer !== undefined).length;
+    const el = document.getElementById('tb-tally');
+    if (el) el.textContent = `${answered} / ${tbIds.length} answered`;
   }
 }
 
@@ -712,6 +759,75 @@ function showFinalResults() {
 
   if (soundEnabled) { audio.init(); audio.fanfare(); setTimeout(()=>audio.crowd(),500); }
   spawnConfetti(60);
+
+  // Detect tie at the top
+  const topScore = Math.max(...Object.values(players).map(p => p.score || 0));
+  const topTied = Object.entries(players).filter(([,p]) => (p.score||0) === topScore);
+  const tbBtn = document.getElementById('btn-tiebreaker');
+  if (topTied.length > 1) {
+    tbBtn.style.display = 'inline-flex';
+    tbBtn.onclick = () => startTiebreaker(topTied.map(([pid]) => pid));
+  } else {
+    tbBtn.style.display = 'none';
+  }
+}
+
+// ── TIEBREAKER ──
+let tiebreakerPlayerIds = [];
+
+async function startTiebreaker(tiedIds) {
+  tiebreakerPlayerIds = tiedIds;
+  const tbMap = {};
+  tiedIds.forEach(pid => { tbMap[pid] = true; });
+  await gameRef.update({ status: 'tiebreaker', tiebreakerPlayers: tbMap, timerEnd: Date.now() + TIMER_SECS * 1000 });
+  showScreen('tiebreaker-q');
+  const names = tiedIds.map(pid => gameData.players?.[pid]?.name || '?').join(' · ');
+  document.getElementById('tb-tied-players').textContent = `Tied players: ${names}`;
+  document.getElementById('tb-q-text').textContent = TIEBREAKER.text;
+  document.getElementById('btn-tb-reveal').addEventListener('click', revealTiebreakerAnswer);
+  startTimer(TIMER_SECS, 'timer-ring-tb', 'timer-num-tb', 'timer-wrap-tb', revealTiebreakerAnswer);
+  if (soundEnabled) { audio.init(); audio.questionStab(); setTimeout(() => audio.startBeat(), 300); }
+}
+
+function revealTiebreakerAnswer() {
+  stopTimer();
+  audio.stopBeat();
+  gameRef.update({ status: 'tiebreaker_reveal' });
+  showScreen('tiebreaker-result');
+
+  const players = gameData.players || {};
+  const ANSWER = TIEBREAKER.answer;
+
+  const results = tiebreakerPlayerIds.map(pid => {
+    const tbAns = players[pid]?.tbAnswer;
+    const value = tbAns ? parseInt(tbAns.value) : null;
+    const time  = tbAns ? tbAns.time : Infinity;
+    const distance = (value !== null && !isNaN(value)) ? Math.abs(value - ANSWER) : Infinity;
+    return { pid, name: players[pid]?.name, avatar: players[pid]?.avatar, value, time, distance };
+  });
+
+  results.sort((a, b) => a.distance - b.distance || a.time - b.time);
+
+  const list = document.getElementById('tb-results-list');
+  list.innerHTML = '';
+  results.forEach((r, i) => {
+    const av = getAvatar(r.avatar);
+    const li = document.createElement('li');
+    li.className = 'lb-item';
+    li.style.animationDelay = (i * 0.1) + 's';
+    const distStr = r.distance === 0 ? '✅ Exact!' : (r.distance === Infinity ? 'No answer' : `Off by ${r.distance}`);
+    const timeNote = i > 0 && results[i-1].distance === r.distance ? ' (slower)' : '';
+    li.innerHTML = `<div class="lb-rank">${['🥇','🥈','🥉'][i] || (i+1)}</div>
+      ${renderAvatarBadge(av, 40)}
+      <div class="lb-info flex-col gap-4">
+        <div style="font-weight:700">${escHtml(r.name||'?')}${i === 0 ? ' 🏆' : ''}</div>
+        <div style="font-size:.8rem;color:rgba(255,255,255,.6)">Said: ${r.value !== null ? r.value : '–'} · ${distStr}${timeNote}</div>
+      </div>`;
+    list.appendChild(li);
+  });
+
+  if (soundEnabled) { audio.init(); audio.fanfare(); }
+  spawnConfetti(50);
 }
 
 // ── CONFETTI ──

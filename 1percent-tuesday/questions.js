@@ -211,3 +211,9 @@ const CONNECTION_QUESTIONS = [
     tuesdayAnswer: 1
   }
 ];
+
+const TIEBREAKER = {
+  text: "How many mice would have to stand on top of each other to be the same height as Tuesday?",
+  answer: 19,
+  display: "19 mice"
+};

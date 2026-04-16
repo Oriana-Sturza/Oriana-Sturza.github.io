@@ -154,6 +154,42 @@
     <div class="mob-subtitle">Host is showing who matched…</div>
   </div>
 
+  <!-- ── TIEBREAKER ── -->
+  <div id="screen-tiebreaker" class="screen flex-col gap-14">
+    <div class="conn-badge" style="padding:12px 16px;text-align:center">
+      <span style="font-size:1rem;font-weight:800">⚡ Tiebreaker!</span>
+    </div>
+    <div style="background:rgba(255,204,0,.12);border:1px solid rgba(255,204,0,.4);border-radius:12px;padding:10px 14px;font-size:.82rem;color:#ffcc00;text-align:center;line-height:1.5">
+      Closest guess wins · Tied? Fastest answer takes it!
+    </div>
+    <div class="mob-timer"><div class="mob-timer-fill" id="tb-timer-fill"></div></div>
+    <div style="font-weight:700;font-size:1.05rem;line-height:1.5;text-align:center" id="tb-q-text"></div>
+    <div id="tb-input-wrap" class="flex-col gap-12">
+      <input type="number" id="tb-answer-inp" placeholder="Enter a number…" inputmode="numeric" style="font-size:1.4rem;text-align:center">
+      <button class="btn btn-primary btn-lg" id="btn-tb-submit">Lock In ✓</button>
+    </div>
+    <div id="tb-answered-msg" style="display:none" class="glass flex-col flex-center gap-8 text-center" style="padding:20px">
+      <div style="font-size:1.5rem">✏️</div>
+      <div style="font-weight:700;font-size:1.1rem" id="tb-submitted-text"></div>
+      <div style="font-size:.85rem;color:rgba(255,255,255,.6)">Locked in! Waiting for result…</div>
+    </div>
+  </div>
+
+  <!-- ── TIEBREAKER WAIT (non-participants) ── -->
+  <div id="screen-tiebreaker-wait" class="screen flex-col flex-center gap-20 text-center">
+    <div style="font-size:3rem">⚡</div>
+    <div class="mob-title">Tiebreaker!</div>
+    <div class="mob-subtitle">Some players are fighting for the top spot…</div>
+  </div>
+
+  <!-- ── TIEBREAKER REVEAL ── -->
+  <div id="screen-tiebreaker-reveal" class="screen flex-col flex-center gap-20 text-center">
+    <div class="result-big" id="tb-rev-emoji"></div>
+    <div style="font-size:1.2rem;font-weight:700" id="tb-rev-text"></div>
+    <div class="mob-subtitle" id="tb-rev-detail"></div>
+    <div class="score-badge" style="color:#33ff99">The answer: 19 mice 🐭</div>
+  </div>
+
   <!-- ── FINAL ── -->
   <div id="screen-final" class="screen flex-col flex-center gap-20 text-center">
     <div style="font-size:3rem">🎉</div>
@@ -208,7 +244,7 @@ function tryInitAudio() {
 }
 
 // ── SCREENS ──
-const BRIGHT_SCREENS = ['question', 'reveal', 'conn-q', 'conn-rev-wait'];
+const BRIGHT_SCREENS = ['question', 'reveal', 'conn-q', 'conn-rev-wait', 'tiebreaker', 'tiebreaker-reveal'];
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById('screen-' + id);
@@ -372,6 +408,25 @@ function onGameUpdate() {
     return;
   }
 
+  if (status === 'tiebreaker') {
+    if (lastStatus === 'tiebreaker') return;
+    const tbPlayers = gameData.tiebreakerPlayers || {};
+    if (tbPlayers[playerId]) {
+      showTiebreakerScreen();
+    } else {
+      showScreen('tiebreaker-wait');
+    }
+    lastStatus = 'tiebreaker';
+    return;
+  }
+
+  if (status === 'tiebreaker_reveal') {
+    if (lastStatus === 'tiebreaker_reveal') return;
+    showTiebreakerRevealScreen();
+    lastStatus = 'tiebreaker_reveal';
+    return;
+  }
+
   if (status === 'final') {
     showFinalScreen();
     lastStatus = status;
@@ -516,6 +571,71 @@ function showFinalScreen() {
   }
 
   showScreen('final');
+}
+
+// ── TIEBREAKER ──
+function showTiebreakerScreen() {
+  showScreen('tiebreaker');
+  currentAnswer = null;
+  document.getElementById('tb-q-text').textContent = TIEBREAKER.text;
+  const inp = document.getElementById('tb-answer-inp');
+  inp.value = '';
+  inp.disabled = false;
+  document.getElementById('tb-input-wrap').style.display = 'flex';
+  document.getElementById('tb-answered-msg').style.display = 'none';
+  document.getElementById('btn-tb-submit').onclick = submitTiebreakerAnswer;
+  inp.onkeydown = e => { if (e.key === 'Enter') submitTiebreakerAnswer(); };
+  setTimeout(() => inp.focus(), 100);
+  startMobTimer(40, 'tb-timer-fill');
+}
+
+function submitTiebreakerAnswer() {
+  if (currentAnswer !== null) return;
+  const val = document.getElementById('tb-answer-inp').value.trim();
+  if (!val) return;
+  currentAnswer = val;
+  tryInitAudio();
+  document.getElementById('tb-input-wrap').style.display = 'none';
+  document.getElementById('tb-answered-msg').style.display = 'flex';
+  document.getElementById('tb-submitted-text').textContent = '"' + val + '"';
+  playerRef.child('tbAnswer').set({ value: val, time: Date.now() });
+  if (audioInited) audio.tick();
+}
+
+function showTiebreakerRevealScreen() {
+  stopMobTimer();
+  const tbPlayers = gameData.tiebreakerPlayers || {};
+  const players = gameData.players || {};
+  const ANSWER = TIEBREAKER.answer;
+
+  if (!tbPlayers[playerId]) {
+    showScreen('tiebreaker-wait');
+    return;
+  }
+
+  const myTbAns = players[playerId]?.tbAnswer;
+  const myValue = myTbAns ? parseInt(myTbAns.value) : null;
+  const myDist = (myValue !== null && !isNaN(myValue)) ? Math.abs(myValue - ANSWER) : Infinity;
+
+  const results = Object.keys(tbPlayers).map(pid => {
+    const ans = players[pid]?.tbAnswer;
+    const val = ans ? parseInt(ans.value) : null;
+    const dist = (val !== null && !isNaN(val)) ? Math.abs(val - ANSWER) : Infinity;
+    return { pid, dist, time: ans?.time ?? Infinity };
+  }).sort((a, b) => a.dist - b.dist || a.time - b.time);
+
+  const rank = results.findIndex(r => r.pid === playerId);
+  const isWinner = rank === 0;
+  const winnerName = players[results[0]?.pid]?.name || '?';
+
+  document.getElementById('tb-rev-emoji').textContent = isWinner ? '🏆' : (['🥈','🥉'][rank-1] || '😅');
+  document.getElementById('tb-rev-text').textContent = isWinner ? 'You win the tiebreaker! 🎉' : `${winnerName} wins the tiebreaker!`;
+  document.getElementById('tb-rev-detail').textContent = myValue !== null
+    ? `You said ${myValue} · off by ${myDist === Infinity ? '∞' : myDist}`
+    : 'You didn\'t submit in time';
+
+  if (audioInited) isWinner ? audio.fanfare() : audio.reveal();
+  showScreen('tiebreaker-reveal');
 }
 
 // ── MOB TIMER ──
