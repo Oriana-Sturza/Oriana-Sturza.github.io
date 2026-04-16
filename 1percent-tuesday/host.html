@@ -390,7 +390,8 @@ function showQuestionScreen(qIdx) {
   document.getElementById('q-options-wrap').innerHTML = '<div class="typing-indicator">📱 Players are typing their answers…</div>';
   startTimer(TIMER_SECS, 'timer-ring', 'timer-num', 'timer-wrap', revealAnswer);
   gameRef.update({ status: 'question', currentQuestion: qIdx, timerEnd: Date.now() + TIMER_SECS * 1000 });
-  if (soundEnabled) { audio.init(); audio.questionStab(); setTimeout(() => audio.startBeat(), 300); }
+  const beatVariant = Math.floor(qIdx / 4);
+  if (soundEnabled) { audio.init(); audio.questionStab(); setTimeout(() => audio.startBeat(beatVariant), 300); }
 }
 
 // ── RENDER OPTIONS ──
@@ -538,17 +539,29 @@ function toggleCorrect(pid, qIdx, points) {
 
 // ── NEXT QUESTION ──
 async function nextQuestion() {
-  const qIdx = (gameData.currentQuestion || 0);
+  const qIdx = gameData.currentQuestion || 0;
   const nextIdx = qIdx + 1;
 
-  if (nextIdx >= QUESTIONS.length) {
-    showLeaderboard('before-connection');
-    return;
+  // After every 4 puzzle questions, insert the corresponding connection question
+  if (nextIdx % 4 === 0) {
+    const cIdx = (nextIdx / 4) - 1;
+    if (cIdx < CONNECTION_QUESTIONS.length) {
+      connCurrentQ = cIdx;
+      if (cIdx === 0) {
+        // First connection: show intro so host can pick Tuesday
+        await gameRef.update({ status: 'connection', currentQuestion: nextIdx, connCurrentQ: 0, tuesdayId: null });
+        showConnIntro();
+      } else {
+        // Subsequent connections: go straight to question (Tuesday already picked)
+        await gameRef.update({ status: 'connection', currentQuestion: nextIdx, connCurrentQ: cIdx, timerEnd: Date.now() + TIMER_SECS * 1000 });
+        showConnectionQuestion(cIdx);
+      }
+      return;
+    }
   }
 
-  // Show leaderboard every 5 questions
-  if (nextIdx % 5 === 0 && nextIdx < QUESTIONS.length) {
-    showLeaderboard('question', nextIdx);
+  if (nextIdx >= QUESTIONS.length) {
+    showFinalResults();
     return;
   }
 
@@ -588,13 +601,7 @@ function renderLeaderboard(listId) {
 }
 
 function lbContinue() {
-  const a = _lbNextAction;
-  if (!a) return;
-  if (a.action === 'before-connection') {
-    showConnIntro();
-  } else if (a.action === 'question') {
-    showQuestionScreen(a.nextQIdx);
-  }
+  nextQuestion();
 }
 
 // ── CONNECTION INTRO ──
@@ -643,9 +650,9 @@ function showConnectionQuestion(cIdx) {
   document.getElementById('conn-q-text').textContent = q.text;
   document.getElementById('conn-progress').style.width = ((cIdx + 1) / CONNECTION_QUESTIONS.length * 100) + '%';
   renderConnOptions(q, 'conn-options-wrap', false);
-  startTimer(TIMER_SECS, 'timer-ring-conn', 'timer-num-conn', 'timer-wrap-conn');
+  startTimer(TIMER_SECS, 'timer-ring-conn', 'timer-num-conn', 'timer-wrap-conn', revealConnectionAnswer);
   gameRef.update({ connCurrentQ: cIdx, timerEnd: Date.now() + TIMER_SECS * 1000 });
-  if (soundEnabled) { audio.init(); audio.questionStab(); setTimeout(() => audio.startBeat(), 300); }
+  if (soundEnabled) { audio.init(); audio.questionStab(); setTimeout(() => audio.startBeat(cIdx), 300); }
 }
 
 function renderConnOptions(q, wrapperId, revealed, tuesdayAns) {
@@ -718,14 +725,14 @@ function revealConnectionAnswer() {
 
 // ── NEXT CONNECTION QUESTION ──
 async function nextConnectionQuestion() {
-  const next = connCurrentQ + 1;
-  if (next >= CONNECTION_QUESTIONS.length) {
+  const qIdx = gameData.currentQuestion || 0;
+  if (qIdx < QUESTIONS.length) {
+    // Resume puzzle questions where we left off
+    await gameRef.update({ status: 'question' });
+    showQuestionScreen(qIdx);
+  } else {
     showFinalResults();
-    return;
   }
-  connCurrentQ = next;
-  await gameRef.update({ status: 'connection', connCurrentQ: next });
-  showConnectionQuestion(next);
 }
 
 // ── FINAL RESULTS ──

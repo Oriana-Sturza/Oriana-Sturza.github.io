@@ -384,18 +384,18 @@ function onGameUpdate() {
     return;
   }
 
-  if (status === 'connection' && lastStatus !== 'conn-wait' && !lastStatus.startsWith('conn-q')) {
-    // Show connection wait / intro
-    document.getElementById('conn-tuesday-badge').style.display = isTuesday ? 'block' : 'none';
-    showScreen('conn-wait');
-    lastStatus = 'conn-wait';
-    return;
-  }
-
   if (status === 'connection') {
     const cIdx = gameData.connCurrentQ || 0;
-    const myPrevAns = (gameData.players?.[playerId]?.connAnswers?.[cIdx]);
-    if (myPrevAns !== undefined && lastStatus === 'conn-q_' + cIdx) return;
+    if (lastStatus === 'conn-q_' + cIdx) return;
+    // Show wait screen only while host is still selecting Tuesday (first connection only)
+    if (!gameData.tuesdayId) {
+      if (lastStatus !== 'conn-wait') {
+        document.getElementById('conn-tuesday-badge').style.display = isTuesday ? 'block' : 'none';
+        showScreen('conn-wait');
+        lastStatus = 'conn-wait';
+      }
+      return;
+    }
     currentConnAnswer = null;
     showConnectionQuestion(cIdx);
     lastStatus = 'conn-q_' + cIdx;

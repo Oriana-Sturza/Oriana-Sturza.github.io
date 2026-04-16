@@ -112,53 +112,43 @@ class AudioEngine {
     this._noise(0.035, 0, 1.2, 400);
   }
 
-  // ── BACKGROUND BEAT — 32-step, 4-bar loop ──
-  // Sounds close to the show: driving 4/4, synth bass riff, melody hook, hi-hat groove
-  startBeat() {
+  // ── BACKGROUND BEAT — 5 variants, 32-step 4-bar loop ──
+  startBeat(variant = 0) {
     if (!this.ctx || !this.enabled) return;
     this.stopBeat();
     this._bgStep = 0;
 
-    const BPM = 126;
-    const STEP_MS = (60000 / BPM) / 2; // 8th-note steps
+    // Each variant: different BPM + frequency multiplier (changes key/feel)
+    const VARIANTS = [
+      { bpm: 126, f: 1.000 },   // 0: original key
+      { bpm: 130, f: 1.122 },   // 1: major 2nd up, slightly faster
+      { bpm: 120, f: 0.891 },   // 2: whole tone down, more relaxed
+      { bpm: 135, f: 1.260 },   // 3: minor 3rd up, tense/urgent
+      { bpm: 128, f: 1.498 },   // 4: perfect 5th up, epic finale
+    ];
+    const { bpm, f } = VARIANTS[variant % 5];
+    const STEP_MS = (60000 / bpm) / 2;
 
-    // 32 steps = 4 bars
-    // Kick: 4-on-the-floor (steps 0,4,8,12,16,20,24,28)
     const kick  = [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0,
                    1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,0,0];
-    // Snare: 2 & 4 (steps 4,12,20,28 in 8th-note grid? No — snare on beats 2&4 = steps 4,12,20,28 at 8ths)
-    // Actually at 8th-note steps: bar = 8 steps. Beat 2 = step 2, beat 4 = step 6 per bar
     const snare = [0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0,
                    0,0,1,0, 0,0,1,0, 0,0,1,0, 0,0,1,0];
-    // Hi-hat: varies per bar for groove
     const hihat = [1,1,1,1, 1,0,1,0, 1,1,1,1, 1,0,1,1,
                    1,1,1,0, 1,1,1,1, 0,1,1,1, 1,0,1,0];
-    // Open hi-hat accent
     const ohhat = [0,0,0,0, 0,1,0,0, 0,0,0,0, 0,1,0,0,
                    0,0,0,0, 0,1,0,0, 0,0,0,0, 0,1,0,0];
-    // Synth bass riff — varies per bar (Hz, 0=rest)
     const bass  = [
-      // Bar 1: root feel
       110, 0, 110, 0,   0, 87.3, 0, 98,
-      // Bar 2: variation
       110, 0, 0, 110,   98, 0, 87.3, 0,
-      // Bar 3: build — ascending
       82.4, 0, 87.3, 0, 92.5, 0, 98, 0,
-      // Bar 4: fill back to root
       110, 0, 98, 0,    87.3, 98, 110, 0
     ];
-    // Melody hook — comes in bar 2 onwards (Hz, 0=rest)
     const mel = [
-      // Bar 1: silence
       0,0,0,0, 0,0,0,0,
-      // Bar 2: hook enters
       0,0,659,0, 0,0,784,0,
-      // Bar 3: continues
       659,0,0,0, 523,0,659,0,
-      // Bar 4: resolves
       784,0,659,0, 523,0,0,0
     ];
-    // Counter-melody pad (softer, sustained)
     const pad = [
       0,0,0,0, 0,0,0,0,
       0,0,0,0, 0,0,0,0,
@@ -175,9 +165,9 @@ class AudioEngine {
       if (snare[s]) { this._noise(0.08, 0, 0.1, 2000); this._osc('sine', 200, 0.05, 0, 0.08); }
       if (hihat[s]) this._noise(0.025, 0, 0.035, 9000);
       if (ohhat[s]) this._noise(0.04,  0, 0.09,  7000);
-      if (bass[s])  this._osc('sawtooth', bass[s], 0.08, 0, stepSec * 1.6);
-      if (mel[s])   this._osc('triangle', mel[s],  0.07, 0, stepSec * 1.8);
-      if (pad[s])   this._osc('sine',     pad[s],  0.04, 0, stepSec * 3.5);
+      if (bass[s])  this._osc('sawtooth', bass[s] * f, 0.08, 0, stepSec * 1.6);
+      if (mel[s])   this._osc('triangle', mel[s]  * f, 0.07, 0, stepSec * 1.8);
+      if (pad[s])   this._osc('sine',     pad[s]  * f, 0.04, 0, stepSec * 3.5);
 
       this._bgStep++;
     }, STEP_MS);
