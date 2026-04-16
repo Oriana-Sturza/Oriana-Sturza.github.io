@@ -3,7 +3,16 @@
 html, body {
   height: 100%;
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-  background: #07071a;
+  background:
+    linear-gradient(135deg,
+      #3d0066 0%,
+      #001a66 18%,
+      #004433 34%,
+      #663300 50%,
+      #660033 66%,
+      #003366 82%,
+      #330066 100%);
+  background-attachment: fixed;
   color: #fff;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
@@ -208,10 +217,11 @@ input[type="text"]::placeholder { color: rgba(255,255,255,.35); }
   min-height: 64px; font-family: inherit; color: #fff;
 }
 .mob-btn:active { transform: scale(.97); }
-.mob-btn[data-letter="A"] { background: linear-gradient(135deg,#cc0044,#ff0055); }
-.mob-btn[data-letter="B"] { background: linear-gradient(135deg,#005599,#0099ff); }
-.mob-btn[data-letter="C"] { background: linear-gradient(135deg,#aa8800,#ffcc00); color: #111; }
-.mob-btn[data-letter="D"] { background: linear-gradient(135deg,#880099,#cc00ff); }
+.mob-btn[data-letter="A"],
+.mob-btn[data-letter="B"],
+.mob-btn[data-letter="C"],
+.mob-btn[data-letter="D"] { background: rgba(15,15,35,0.85); border: 2px solid rgba(255,255,255,0.18); color: #fff; }
+.mob-btn[data-letter="C"] { color: #fff; }
 .mob-btn .mob-letter { width: 36px; height: 36px; border-radius: 50%; background: rgba(0,0,0,.2); display: flex; align-items: center; justify-content: center; font-size: .9rem; font-weight: 900; flex-shrink: 0; }
 .mob-btn.selected { filter: brightness(1.25); transform: scale(.98); box-shadow: 0 0 24px rgba(255,255,255,.3); }
 .mob-btn.disabled { opacity: .45; pointer-events: none; }

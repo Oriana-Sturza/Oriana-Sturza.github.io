@@ -15,6 +15,10 @@
     #screen-lobby { justify-content:center; }
     #screen-final { overflow-y:auto; }
     .select-tuesday-hint { font-size:.85rem; color:#ffcc00; text-align:center; background:rgba(255,204,0,.1); border:1px solid rgba(255,204,0,.25); border-radius:10px; padding:10px 16px; }
+    .typing-indicator { color:rgba(255,255,255,.5); font-size:1rem; text-align:center; padding:20px; border:2px dashed rgba(255,255,255,.15); border-radius:14px; }
+    .submission-card { display:flex; align-items:center; gap:12px; width:100%; }
+    .sub-correct { border-color:#33ff99 !important; background:rgba(51,255,153,.12) !important; }
+    .sub-wrong   { border-color:rgba(255,0,80,.4) !important; background:rgba(255,0,80,.08) !important; }
   </style>
 </head>
 <body>
@@ -57,7 +61,7 @@
         <div class="diff-badge" id="q-diff-badge"></div>
         <div class="flex-col gap-4">
           <div class="q-num" id="q-num-label"></div>
-          <div class="q-text" id="q-text"></div>
+          <div class="q-text" id="q-text" style="white-space:pre-line"></div>
         </div>
       </div>
       <div id="q-options-wrap"></div>
@@ -75,12 +79,15 @@
       <div class="game-title" style="font-size:1.4rem"><span class="white">The 1% of </span><span class="rainbow-text">Tuesday</span><span class="white"> Club</span></div>
       <div class="answer-tally" id="rev-stats"></div>
     </div>
-    <div class="q-card flex-col gap-12" style="flex:1">
+    <div class="q-card flex-col gap-12" style="flex:1;overflow-y:auto">
       <div class="q-header">
         <div class="diff-badge" id="rev-diff-badge"></div>
-        <div class="q-text" id="rev-q-text"></div>
+        <div class="q-text" id="rev-q-text" style="white-space:pre-line"></div>
       </div>
-      <div id="rev-options-wrap"></div>
+      <div style="background:rgba(51,255,153,.15);border:3px solid #33ff99;border-radius:16px;padding:16px 24px;text-align:center">
+        <div style="font-size:.8rem;color:#33ff99;font-weight:700;letter-spacing:.1em;text-transform:uppercase;margin-bottom:6px">The Answer</div>
+        <div id="rev-answer-box" style="font-size:2.2rem;font-weight:900;color:#33ff99"></div>
+      </div>
       <div class="celebration-text" id="rev-celebration" style="display:none"></div>
     </div>
     <div id="rev-who-correct" class="player-grid" style="max-width:800px;width:100%;margin:0 auto"></div>
@@ -331,8 +338,8 @@ function showQuestionScreen(qIdx) {
   document.getElementById('q-points-label').textContent = `Worth ${q.points} points`;
   document.getElementById('q-progress').style.width = ((qIdx + 1) / QUESTIONS.length * 100) + '%';
 
-  renderOptions(q, 'q-options-wrap', false);
-  startTimer(TIMER_SECS, 'timer-ring', 'timer-num', 'timer-wrap');
+  document.getElementById('q-options-wrap').innerHTML = '<div class="typing-indicator">📱 Players are typing their answers…</div>';
+  startTimer(TIMER_SECS, 'timer-ring', 'timer-num', 'timer-wrap', revealAnswer);
   gameRef.update({ status: 'question', currentQuestion: qIdx, timerEnd: Date.now() + TIMER_SECS * 1000 });
   if (soundEnabled) { audio.init(); audio.questionStab(); setTimeout(() => audio.startBeat(), 300); }
 }
@@ -361,7 +368,7 @@ function renderOptions(q, wrapperId, revealed) {
 }
 
 // ── TIMER ──
-function startTimer(secs, ringId, numId, wrapId) {
+function startTimer(secs, ringId, numId, wrapId, onExpire) {
   clearInterval(timerInterval);
   const circumference = 238.76;
   const ring = document.getElementById(ringId);
@@ -376,12 +383,12 @@ function startTimer(secs, ringId, numId, wrapId) {
     num.textContent = remaining;
     if (remaining <= 5) {
       wrap.classList.add('timer-urgent');
-      if (soundEnabled) audio.urgentTick();
+      if (soundEnabled) audio.tick(true);
     } else {
       wrap.classList.remove('timer-urgent');
       if (remaining <= 10 && soundEnabled) audio.tick();
     }
-    if (remaining <= 0) { clearInterval(timerInterval); return; }
+    if (remaining <= 0) { clearInterval(timerInterval); if (onExpire) onExpire(); return; }
     remaining--;
   }
   tick();
@@ -389,6 +396,23 @@ function startTimer(secs, ringId, numId, wrapId) {
 }
 
 function stopTimer() { clearInterval(timerInterval); }
+
+// ── FUZZY MATCH ──
+function fuzzyMatch(submitted, q) {
+  if (!submitted || !submitted.trim()) return false;
+  const norm = s => String(s).toLowerCase().replace(/[^\w\s]/g,'').replace(/\s+/g,' ').trim();
+  const s = norm(submitted);
+  const all = [q.answer, ...(q.acceptedAnswers || [])];
+  for (const a of all) {
+    if (!a) continue;
+    if (s === norm(a)) return true;
+    const sN = s.match(/^(\d+)/)?.[1], aN = norm(a).match(/^(\d+)/)?.[1];
+    if (sN && aN && sN === aN) return true;
+  }
+  return false;
+}
+
+let playerCorrectState = {};
 
 // ── REVEAL ──
 function revealAnswer() {
@@ -399,54 +423,68 @@ function revealAnswer() {
   const players = gameData.players || {};
 
   gameRef.update({ status: 'reveal' });
-
   showScreen('reveal');
+
   document.getElementById('rev-diff-badge').className = 'diff-badge diff-' + q.difficulty;
   document.getElementById('rev-diff-badge').textContent = q.difficultyLabel;
   document.getElementById('rev-q-text').textContent = q.text;
-  renderOptions(q, 'rev-options-wrap', true);
+  document.getElementById('rev-answer-box').textContent = q.answer;
+  document.getElementById('rev-celebration').textContent = q.celebration;
+  document.getElementById('rev-celebration').style.display = 'block';
 
-  const celEl = document.getElementById('rev-celebration');
-  celEl.textContent = q.celebration;
-  celEl.style.display = 'block';
-
-  // Award points
+  // Auto-grade with fuzzy match
   const updates = {};
+  playerCorrectState = {};
   let correctCount = 0;
   Object.entries(players).forEach(([pid, p]) => {
-    const ans = p.answers && p.answers[qIdx];
-    if (ans !== undefined && parseInt(ans) === q.correct) {
-      correctCount++;
-      const newScore = (p.score || 0) + q.points;
-      updates[`players/${pid}/score`] = newScore;
-    }
+    const submitted = (p.answers && p.answers[qIdx]) || '';
+    const correct = fuzzyMatch(submitted, q);
+    playerCorrectState[pid] = correct;
+    if (correct) { correctCount++; updates[`players/${pid}/score`] = (p.score || 0) + q.points; }
   });
   if (Object.keys(updates).length) gameRef.update(updates);
 
-  // Show who got it right
-  const revGrid = document.getElementById('rev-who-correct');
-  revGrid.innerHTML = '';
+  // Render submission cards
+  const grid = document.getElementById('rev-who-correct');
+  grid.innerHTML = '';
   Object.entries(players).forEach(([pid, p]) => {
-    const ans = p.answers && p.answers[qIdx];
-    const correct = ans !== undefined && parseInt(ans) === q.correct;
+    const submitted = (p.answers && p.answers[qIdx]) || '';
+    const correct = playerCorrectState[pid];
     const av = getAvatar(p.avatar);
     const div = document.createElement('div');
-    div.className = 'p-card';
-    div.style.borderColor = correct ? '#33ff99' : '#ff0055';
-    div.style.background = correct ? 'rgba(51,255,153,.12)' : 'rgba(255,0,80,.12)';
-    div.innerHTML = renderAvatarBadge(av, 44) + `<div class="p-name">${escHtml(p.name)}</div><div style="font-size:.8rem">${correct ? '✅' : '❌'}</div>`;
-    revGrid.appendChild(div);
+    div.className = 'p-card submission-card' + (correct ? ' sub-correct' : ' sub-wrong');
+    div.id = 'sub-' + pid;
+    div.innerHTML = renderAvatarBadge(av, 40) +
+      `<div class="flex-col gap-4" style="flex:1;min-width:0">
+        <div class="p-name">${escHtml(p.name)}</div>
+        <div style="font-size:.8rem;color:rgba(255,255,255,.6);font-style:italic">"${escHtml(submitted||'no answer')}"</div>
+       </div>
+       <button onclick="toggleCorrect('${pid}',${qIdx},${q.points})" style="background:none;border:none;font-size:1.4rem;cursor:pointer;padding:4px">${correct?'✅':'❌'}</button>`;
+    grid.appendChild(div);
   });
 
   const total = Object.keys(players).length;
   document.getElementById('rev-stats').textContent = `${correctCount} / ${total} got it right`;
-
   if (soundEnabled) { audio.init(); correctCount > 0 ? audio.fanfare() : audio.reveal(); }
   if (correctCount > 0) spawnConfetti(15);
+  document.getElementById('btn-next').textContent = qIdx < QUESTIONS.length - 1 ? 'Next Question ▶' : 'See Final Leaderboard 🏆';
+}
 
-  // Show "Next" vs "Leaderboard" logic
-  document.getElementById('btn-next').textContent =
-    qIdx < QUESTIONS.length - 1 ? 'Next Question ▶' : 'See Final Leaderboard 🏆';
+function toggleCorrect(pid, qIdx, points) {
+  const was = playerCorrectState[pid];
+  playerCorrectState[pid] = !was;
+  const p = gameData.players?.[pid];
+  if (p) {
+    const newScore = Math.max(0, (p.score || 0) + (was ? -points : points));
+    gameRef.update({ [`players/${pid}/score`]: newScore });
+  }
+  const card = document.getElementById('sub-' + pid);
+  if (card) {
+    card.className = 'p-card submission-card' + (!was ? ' sub-correct' : ' sub-wrong');
+    card.querySelector('button').textContent = !was ? '✅' : '❌';
+  }
+  const correctCount = Object.values(playerCorrectState).filter(Boolean).length;
+  document.getElementById('rev-stats').textContent = `${correctCount} / ${Object.keys(gameData.players||{}).length} got it right`;
 }
 
 // ── NEXT QUESTION ──

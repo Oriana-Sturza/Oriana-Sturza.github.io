@@ -79,10 +79,14 @@
     <div id="p-pic-wrap" style="display:none">
       <div class="pic-grid" id="p-pic-grid"></div>
     </div>
-    <div class="mob-answers" id="p-answers"></div>
-    <div id="p-answered-msg" style="display:none" class="glass text-center" style="padding:16px">
-      <div style="font-size:1.5rem">⏳</div>
-      <div style="font-size:.9rem;color:rgba(255,255,255,.6);margin-top:4px">Answer locked in! Waiting for others…</div>
+    <div id="p-input-wrap" class="flex-col gap-12">
+      <input type="text" id="p-text-answer" placeholder="Type your answer…" autocomplete="off" autocorrect="off" spellcheck="false" style="font-size:1.2rem;text-align:center">
+      <button class="btn btn-primary btn-lg" id="btn-submit-answer">Lock In ✓</button>
+    </div>
+    <div id="p-answered-msg" style="display:none" class="glass flex-col flex-center gap-8 text-center" style="padding:20px">
+      <div style="font-size:1.5rem">✏️</div>
+      <div style="font-weight:700;font-size:1.1rem" id="p-submitted-text"></div>
+      <div style="font-size:.85rem;color:rgba(255,255,255,.6)">Locked in! Waiting for others…</div>
     </div>
   </div>
 
@@ -383,55 +387,35 @@ function showQuestionScreen(qIdx) {
   document.getElementById('p-diff-badge').textContent = q.difficultyLabel;
   document.getElementById('p-score-display').textContent = myScore + ' pts';
   document.getElementById('p-q-text').textContent = q.text;
+  document.getElementById('p-q-text').style.whiteSpace = 'pre-line';
+  document.getElementById('p-pic-wrap').style.display = 'none';
+  document.getElementById('p-input-wrap').style.display = 'flex';
   document.getElementById('p-answered-msg').style.display = 'none';
 
-  const picWrap = document.getElementById('p-pic-wrap');
-  const picGrid = document.getElementById('p-pic-grid');
-  if (q.type === 'picture') {
-    picWrap.style.display = 'block';
-    picGrid.innerHTML = '';
-    q.pictureIcons.forEach((icon, i) => {
-      const d = document.createElement('div');
-      d.className = 'pic-opt';
-      d.style.cursor = 'pointer';
-      d.innerHTML = `<div class="pic-emoji">${icon}</div><div style="font-size:.75rem">${LETTERS[i]}</div>`;
-      d.addEventListener('click', () => submitAnswer(qIdx, i));
-      picGrid.appendChild(d);
-    });
-  } else {
-    picWrap.style.display = 'none';
-  }
+  const inp = document.getElementById('p-text-answer');
+  inp.value = '';
+  inp.disabled = false;
+  setTimeout(() => inp.focus(), 100);
 
-  const answersEl = document.getElementById('p-answers');
-  answersEl.innerHTML = '';
-  q.options.forEach((opt, i) => {
-    const btn = document.createElement('button');
-    btn.className = 'mob-btn';
-    btn.dataset.letter = LETTERS[i];
-    btn.innerHTML = `<div class="mob-letter">${LETTERS[i]}</div><div>${opt}</div>`;
-    btn.addEventListener('click', () => { tryInitAudio(); submitAnswer(qIdx, i); });
-    answersEl.appendChild(btn);
-  });
+  document.getElementById('btn-submit-answer').onclick = () => submitTextAnswer(qIdx);
+  inp.onkeydown = e => { if (e.key === 'Enter') submitTextAnswer(qIdx); };
 
+  currentAnswer = null;
   startMobTimer(30, 'p-timer-fill');
 }
 
-function submitAnswer(qIdx, answerIdx) {
+function submitTextAnswer(qIdx) {
   if (currentAnswer !== null) return;
-  currentAnswer = answerIdx;
+  const val = document.getElementById('p-text-answer').value.trim();
+  if (!val) return;
+  currentAnswer = val;
+  tryInitAudio();
 
-  // Highlight selected
-  document.querySelectorAll('#p-answers .mob-btn').forEach((btn, i) => {
-    if (i === answerIdx) btn.classList.add('selected');
-    else btn.classList.add('disabled');
-  });
-  document.querySelectorAll('#p-pic-grid .pic-opt').forEach((el, i) => {
-    if (i === answerIdx) el.style.borderColor = '#ffcc00';
-    else el.style.opacity = '.4';
-  });
+  document.getElementById('p-input-wrap').style.display = 'none';
+  document.getElementById('p-answered-msg').style.display = 'flex';
+  document.getElementById('p-submitted-text').textContent = '"' + val + '"';
 
-  document.getElementById('p-answered-msg').style.display = 'block';
-  playerRef.child('answers/' + qIdx).set(answerIdx);
+  playerRef.child('answers/' + qIdx).set(val);
   if (audioInited) audio.tick();
 }
 
@@ -441,16 +425,17 @@ function showRevealScreen() {
   const qIdx = gameData.currentQuestion || 0;
   const q = QUESTIONS[qIdx];
   const me = gameData.players?.[playerId] || {};
-  const myAns = me.answers?.[qIdx];
-  const correct = myAns !== undefined && parseInt(myAns) === q.correct;
+  const myAns = me.answers?.[qIdx] || '';
+  // Score is already updated by host fuzzy-grading; just check if score went up
+  const newScore = me.score || 0;
+  const correct = newScore > myScore;
+  myScore = newScore;
 
   document.getElementById('rev-emoji').textContent = correct ? '✅' : '❌';
   document.getElementById('rev-result-text').textContent = correct
     ? `Correct! +${q.points} pts`
-    : (myAns !== undefined ? 'Not quite!' : 'No answer');
-  document.getElementById('rev-correct-ans').textContent = `Answer: ${q.options[q.correct]}`;
-
-  const newScore = (me.score || 0) + (correct ? q.points : 0);
+    : (myAns ? `You said: "${myAns}"` : 'No answer submitted');
+  document.getElementById('rev-correct-ans').textContent = `Answer: ${q.answer}`;
   document.getElementById('rev-score').textContent = newScore + ' pts';
 
   if (audioInited) correct ? audio.correct() : audio.wrong();
