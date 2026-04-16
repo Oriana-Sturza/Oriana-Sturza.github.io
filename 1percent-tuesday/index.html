@@ -54,14 +54,63 @@
   </div>
 
   <script>
+    // Starfield
     const sf = document.getElementById('starfield');
-    for (let i = 0; i < 120; i++) {
+    for (let i = 0; i < 100; i++) {
       const s = document.createElement('div');
       const sz = Math.random() * 2.5 + .5;
       s.className = 'star';
       s.style.cssText = `left:${Math.random()*100}%;top:${Math.random()*100}%;width:${sz}px;height:${sz}px;--dur:${2+Math.random()*5}s;--delay:${Math.random()*5}s;--op:${.2+Math.random()*.7}`;
       sf.appendChild(s);
     }
+
+    // Floating symbols
+    const SYMS = ['✦','◆','★','✺','✿','❀','◉','✷','✸','✹','✻','✼','❃','❄','❆','❇','❈','❉','❊','✱','✲','⬡','⬢','⬟','◈','◇','✵','✴','✳'];
+    const COLS = ['#ff0050','#ff6600','#ffcc00','#33ff99','#0099ff','#cc00ff','#ff66ff','#ffaacc','#aaffee','#ffffaa'];
+    const symContainer = document.createElement('div');
+    symContainer.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden';
+    document.body.appendChild(symContainer);
+
+    function spawnSymbol() {
+      const el = document.createElement('div');
+      const sym = SYMS[Math.floor(Math.random() * SYMS.length)];
+      const col = COLS[Math.floor(Math.random() * COLS.length)];
+      const size = 10 + Math.random() * 28;
+      const startX = Math.random() * 110 - 5;
+      const drift = (Math.random() - 0.5) * 120;
+      const dur = 8 + Math.random() * 14;
+      const delay = Math.random() * dur;
+      const rot = (Math.random() - 0.5) * 360;
+      el.textContent = sym;
+      el.style.cssText = `
+        position:absolute;
+        left:${startX}%;
+        top:-60px;
+        font-size:${size}px;
+        color:${col};
+        opacity:0;
+        text-shadow: 0 0 ${size/2}px ${col}88;
+        animation: floatSym ${dur}s ${delay}s linear infinite;
+        --drift:${drift}px;
+        --rot:${rot}deg;
+        --size:${size}px;
+      `;
+      symContainer.appendChild(el);
+    }
+
+    // Inject keyframes
+    const styleEl = document.createElement('style');
+    styleEl.textContent = `
+      @keyframes floatSym {
+        0%   { transform: translateY(0) translateX(0) rotate(0deg) scale(0.6); opacity: 0; }
+        8%   { opacity: 0.7; }
+        90%  { opacity: 0.4; }
+        100% { transform: translateY(110vh) translateX(var(--drift)) rotate(var(--rot)) scale(1); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(styleEl);
+
+    for (let i = 0; i < 45; i++) spawnSymbol();
   </script>
 </body>
 </html>
