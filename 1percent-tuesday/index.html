@@ -107,10 +107,46 @@
         90%  { opacity: 0.4; }
         100% { transform: translateY(110vh) translateX(var(--drift)) rotate(var(--rot)) scale(1); opacity: 0; }
       }
+      @keyframes rainbowAppear {
+        0%   { opacity: 0; }
+        15%  { opacity: 1; }
+        75%  { opacity: 1; }
+        100% { opacity: 0; }
+      }
+      .rainbow-arc {
+        position: fixed;
+        width: 120vw;
+        height: 120vw;
+        left: 50%;
+        top: 75vh;
+        transform: translateX(-50%);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 1;
+        opacity: 0;
+        box-shadow:
+          0 0 0 5px rgba(255,0,0,.55),
+          0 0 0 13px rgba(255,140,0,.55),
+          0 0 0 21px rgba(255,230,0,.55),
+          0 0 0 29px rgba(0,200,60,.55),
+          0 0 0 37px rgba(0,100,255,.55),
+          0 0 0 45px rgba(140,0,255,.55);
+        animation: rainbowAppear 7s ease-in-out forwards;
+      }
     `;
     document.head.appendChild(styleEl);
 
     for (let i = 0; i < 45; i++) spawnSymbol();
+
+    // Rainbow arcs — appear periodically like after rain
+    function spawnRainbow() {
+      const arc = document.createElement('div');
+      arc.className = 'rainbow-arc';
+      document.body.appendChild(arc);
+      setTimeout(() => arc.remove(), 7200);
+      setTimeout(spawnRainbow, 18000 + Math.random() * 18000);
+    }
+    setTimeout(spawnRainbow, 3000 + Math.random() * 4000);
   </script>
 </body>
 </html>

@@ -9,7 +9,7 @@ html, body {
     #440066, #002244);
   background-size: 500% 500%;
   background-attachment: fixed;
-  animation: bgSwirl 16s ease infinite;
+  animation: bgSwirl 32s ease infinite;
   color: #fff;
   overflow: hidden;
   -webkit-tap-highlight-color: transparent;
@@ -27,10 +27,10 @@ html, body {
 html.game-active,
 html.game-active body {
   background: linear-gradient(135deg,
-    #7700ff 0%, #ff0066 25%, #ff7700 50%, #00aaff 75%, #cc00ff 100%);
-  background-size: 100% 100%;
-  background-attachment: fixed;
-  animation: none;
+    #7700ff 0%, #ff0066 25%, #ff7700 50%, #00aaff 75%, #cc00ff 100%) !important;
+  background-size: 100% 100% !important;
+  background-attachment: fixed !important;
+  animation: none !important;
 }
 
 /* ── STARFIELD ── */
