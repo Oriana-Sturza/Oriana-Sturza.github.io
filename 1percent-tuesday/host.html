@@ -217,10 +217,12 @@ let tuesdayPlayerId = null;
 let connCurrentQ = 0;
 
 // ── SCREENS ──
+const BRIGHT_SCREENS = ['question', 'reveal', 'conn-q', 'conn-reveal'];
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById('screen-' + id);
   if (el) el.classList.add('active');
+  document.documentElement.classList.toggle('game-active', BRIGHT_SCREENS.includes(id));
 }
 
 // ── ROOM CODE ──

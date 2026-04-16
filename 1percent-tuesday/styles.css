@@ -23,6 +23,17 @@ html, body {
   100% { background-position: 0% 20%; }
 }
 
+/* ── GAME-ACTIVE BRIGHT BACKGROUND ── */
+html.game-active,
+html.game-active body {
+  background: linear-gradient(-45deg,
+    #7700ff, #ff0066, #cc3300, #ff7700,
+    #00aaff, #cc00ff, #ff0099, #0077ff);
+  background-size: 500% 500%;
+  background-attachment: fixed;
+  animation: bgSwirl 8s ease infinite;
+}
+
 /* ── STARFIELD ── */
 #starfield {
   position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden;

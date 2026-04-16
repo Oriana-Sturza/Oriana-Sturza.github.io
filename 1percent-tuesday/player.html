@@ -208,10 +208,12 @@ function tryInitAudio() {
 }
 
 // ── SCREENS ──
+const BRIGHT_SCREENS = ['question', 'reveal', 'conn-q', 'conn-rev-wait'];
 function showScreen(id) {
   document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
   const el = document.getElementById('screen-' + id);
   if (el) el.classList.add('active');
+  document.documentElement.classList.toggle('game-active', BRIGHT_SCREENS.includes(id));
 }
 
 // ── JOIN ──
@@ -326,9 +328,10 @@ function onGameUpdate() {
   // State transitions
   if (status === 'question') {
     const qIdx = gameData.currentQuestion || 0;
+    if (lastStatus === 'question_' + qIdx) return; // already on this question — don't reset
     currentAnswer = null;
     showQuestionScreen(qIdx);
-    lastStatus = status + '_' + qIdx;
+    lastStatus = 'question_' + qIdx;
     return;
   }
 
