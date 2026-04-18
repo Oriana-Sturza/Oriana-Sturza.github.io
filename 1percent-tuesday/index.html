@@ -164,14 +164,35 @@
     const actx = new (window.AudioContext || window.webkitAudioContext)();
     let musicOn = false, musicInterval = null, musicStep = 0;
 
+    // Gentle funky groove — A major pentatonic, 170ms 16th-note steps (~88 BPM)
+    // Four layers: syncopated melody, answering counter-melody, walking bass, slow pad
+
+    // Main melody — lots of notes, syncopated
     const MELODY = [
-      440, 554, 659, 880,  740, 659, 554, 440,
-      330, 440, 554, 659,  880, 659, 554, 330,
-      440, 659, 880,1047,  880, 659, 440, 330,
-      554, 659, 880, 740,  659, 554, 440, 330
+      440,  0, 554,  0, 659,554,  0,440,
+      659,  0, 740,659,  0,554,440,  0,
+      659,740, 880,  0, 740,659,  0,554,
+      440,659, 880,740,   0,659,554,  0
     ];
-    const BASS = [220,0,0,0,0,0,0,0, 247,0,0,0,0,0,0,0,
-                  165,0,0,0,0,0,0,0, 185,0,0,0,0,0,0,0];
+    // Counter-melody — answers the main melody
+    const COUNTER = [
+        0,  0,  0,  0, 440,  0,  0,330,
+        0,  0, 523,  0,   0,440,  0,  0,
+      440,  0,   0,  0, 554,  0,  0,440,
+        0,440,   0,523,   0,  0,440,  0
+    ];
+    // Walking bass — funky & active
+    const BASS = [
+      110,  0,92.5,  0,87.3,  0,  98,  0,
+     82.4,  0,87.3,  0,  98,  0,87.3,  0,
+      110,  0,  98,  0,87.3,  0,92.5,  0,
+      110,92.5,87.3, 0,82.4,87.3,  98,  0
+    ];
+    // Slow pad — harmonic foundation
+    const PAD = [
+      220,0,0,0,0,0,0,0,  0,0,0,0,261,0,0,0,
+      220,0,0,0,0,0,0,0,  294,0,0,0,261,0,0,0
+    ];
 
     function lp_note(freq, vol, dur, type='sine') {
       if (actx.state !== 'running') return;
@@ -180,9 +201,9 @@
       o.connect(g); g.connect(actx.destination);
       o.type = type; o.frequency.value = freq;
       g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(vol, t + 0.025);
+      g.gain.linearRampToValueAtTime(vol, t + 0.018);
       g.gain.exponentialRampToValueAtTime(0.001, t + dur);
-      o.start(t); o.stop(t + dur + 0.05);
+      o.start(t); o.stop(t + dur + 0.04);
     }
 
     function startMusicLoop() {
@@ -194,11 +215,14 @@
       document.getElementById('music-btn').style.animation = 'none';
       musicInterval = setInterval(() => {
         const s = musicStep % 32;
-        lp_note(MELODY[s], 0.055, 0.55);
-        if (s % 4 === 0) lp_note(MELODY[s] * 0.5, 0.025, 0.9);
-        if (BASS[s]) lp_note(BASS[s], 0.045, 1.1, 'triangle');
+        if (MELODY[s])  lp_note(MELODY[s],  0.052, 0.26);
+        if (COUNTER[s]) lp_note(COUNTER[s], 0.028, 0.26);
+        if (BASS[s])    lp_note(BASS[s],    0.048, 0.36, 'triangle');
+        if (PAD[s])     lp_note(PAD[s],     0.030, 0.90, 'triangle');
+        // Sparkle: soft octave on strong melody beats
+        if (MELODY[s] && s % 8 === 0) lp_note(MELODY[s] * 2, 0.018, 0.18);
         musicStep++;
-      }, 340);
+      }, 170);
     }
 
     function stopLandingMusic() {
