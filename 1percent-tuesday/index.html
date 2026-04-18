@@ -164,35 +164,47 @@
     const actx = new (window.AudioContext || window.webkitAudioContext)();
     let musicOn = false, musicInterval = null, musicStep = 0;
 
-    // Gentle funky groove — A major pentatonic, 170ms 16th-note steps (~88 BPM)
-    // Four layers: syncopated melody, answering counter-melody, walking bass, slow pad
+    // ── 70s soul/funk inspired original groove ──
+    // F major, 110 BPM 16th-note grid (136ms/step)
+    // Kick · snare · hi-hat · walking bass · soulful melody · counter · chord stabs
 
-    // Main melody — lots of notes, syncopated
-    const MELODY = [
-      440,  0, 554,  0, 659,554,  0,440,
-      659,  0, 740,659,  0,554,440,  0,
-      659,740, 880,  0, 740,659,  0,554,
-      440,659, 880,740,   0,659,554,  0
-    ];
-    // Counter-melody — answers the main melody
-    const COUNTER = [
-        0,  0,  0,  0, 440,  0,  0,330,
-        0,  0, 523,  0,   0,440,  0,  0,
-      440,  0,   0,  0, 554,  0,  0,440,
-        0,440,   0,523,   0,  0,440,  0
-    ];
-    // Walking bass — funky & active
+    const STEP_MS = 136;
+
+    // Drums
+    const KICK  = [1,0,0,0,1,0,0,0,1,0,0,0,1,0,1,0, 1,0,0,0,1,0,0,0,1,0,0,0,1,0,1,0];
+    const SNARE = [0,0,0,0,1,0,0,1,0,0,0,0,1,0,0,0, 0,0,0,0,1,0,0,1,0,0,0,0,1,0,0,0];
+    const HIHAT = [1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0, 1,0,1,0,1,0,1,0,1,0,1,0,1,0,1,0];
+    const OHAT  = [0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0, 0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0];
+
+    // Bass — F2=87.3 G2=98 A2=110 Bb2=116.5 C3=130.8
     const BASS = [
-      110,  0,92.5,  0,87.3,  0,  98,  0,
-     82.4,  0,87.3,  0,  98,  0,87.3,  0,
-      110,  0,  98,  0,87.3,  0,92.5,  0,
-      110,92.5,87.3, 0,82.4,87.3,  98,  0
+       87.3,0,0,87.3,  0, 98,  0,  0,
+       87.3,0,110,  0,130.8,0,110,  0,
+         98,0,0,87.3,   0,  0,110,  0,
+       87.3,0,130.8,110, 0, 98, 87.3,0
     ];
-    // Slow pad — harmonic foundation
-    const PAD = [
-      220,0,0,0,0,0,0,0,  0,0,0,0,261,0,0,0,
-      220,0,0,0,0,0,0,0,  294,0,0,0,261,0,0,0
+
+    // Soulful melody — F4=349 G4=392 A4=440 Bb4=466 C5=523 D5=587 F5=698
+    const MEL = [
+      349,  0,  0,  0, 523,  0,440,  0,
+        0,392,349,  0,   0,  0,523,  0,
+      440,  0,466,  0, 523,  0,587,  0,
+      523,  0,440,  0, 349,  0,  0,  0
     ];
+
+    // Counter-melody (call & response)
+    const CTR = [
+        0,  0,  0,  0,   0,  0,  0,  0,
+      698,  0,587,  0,   0,523,  0,  0,
+        0,  0,  0,  0,   0,  0,  0,  0,
+      587,  0,523,  0, 466,  0,  0,  0
+    ];
+
+    // Chord stab positions (play F+A+C = 349+440+523 together, short & punchy)
+    const STAB = [0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,0];
+
+    // Slow pad (harmony)
+    const PAD  = [175,0,0,0,0,0,0,0,0,0,0,0,220,0,0,0, 175,0,0,0,0,0,0,0,261,0,0,0,220,0,0,0];
 
     function lp_note(freq, vol, dur, type='sine') {
       if (actx.state !== 'running') return;
@@ -201,9 +213,37 @@
       o.connect(g); g.connect(actx.destination);
       o.type = type; o.frequency.value = freq;
       g.gain.setValueAtTime(0, t);
-      g.gain.linearRampToValueAtTime(vol, t + 0.018);
+      g.gain.linearRampToValueAtTime(vol, t + 0.012);
       g.gain.exponentialRampToValueAtTime(0.001, t + dur);
       o.start(t); o.stop(t + dur + 0.04);
+    }
+
+    function lp_kick() {
+      if (actx.state !== 'running') return;
+      const t = actx.currentTime;
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.connect(g); g.connect(actx.destination);
+      o.frequency.setValueAtTime(160, t);
+      o.frequency.exponentialRampToValueAtTime(0.001, t + 0.32);
+      g.gain.setValueAtTime(0.38, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + 0.32);
+      o.start(t); o.stop(t + 0.36);
+    }
+
+    function lp_noise(vol, dur, hp) {
+      if (actx.state !== 'running') return;
+      const t = actx.currentTime;
+      const n = Math.ceil(actx.sampleRate * dur);
+      const buf = actx.createBuffer(1, n, actx.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < n; i++) d[i] = Math.random() * 2 - 1;
+      const src = actx.createBufferSource(); src.buffer = buf;
+      const f = actx.createBiquadFilter(); f.type = 'highpass'; f.frequency.value = hp;
+      const g = actx.createGain();
+      src.connect(f); f.connect(g); g.connect(actx.destination);
+      g.gain.setValueAtTime(vol, t);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      src.start(t); src.stop(t + dur + 0.02);
     }
 
     function startMusicLoop() {
@@ -215,14 +255,17 @@
       document.getElementById('music-btn').style.animation = 'none';
       musicInterval = setInterval(() => {
         const s = musicStep % 32;
-        if (MELODY[s])  lp_note(MELODY[s],  0.052, 0.26);
-        if (COUNTER[s]) lp_note(COUNTER[s], 0.028, 0.26);
-        if (BASS[s])    lp_note(BASS[s],    0.048, 0.36, 'triangle');
-        if (PAD[s])     lp_note(PAD[s],     0.030, 0.90, 'triangle');
-        // Sparkle: soft octave on strong melody beats
-        if (MELODY[s] && s % 8 === 0) lp_note(MELODY[s] * 2, 0.018, 0.18);
+        if (KICK[s])  lp_kick();
+        if (SNARE[s]) lp_noise(0.055, 0.10, 1800);
+        if (HIHAT[s]) lp_noise(0.018, 0.03, 9000);
+        if (OHAT[s])  lp_noise(0.030, 0.08, 7000);
+        if (BASS[s])  lp_note(BASS[s], 0.055, 0.28, 'triangle');
+        if (MEL[s])   lp_note(MEL[s],  0.048, 0.22);
+        if (CTR[s])   lp_note(CTR[s],  0.030, 0.22);
+        if (PAD[s])   lp_note(PAD[s],  0.028, 0.85, 'triangle');
+        if (STAB[s])  { lp_note(349, 0.038, 0.10, 'sawtooth'); lp_note(440, 0.032, 0.10, 'sawtooth'); lp_note(523, 0.028, 0.10, 'sawtooth'); }
         musicStep++;
-      }, 170);
+      }, STEP_MS);
     }
 
     function stopLandingMusic() {
@@ -233,18 +276,18 @@
       document.getElementById('music-btn').style.animation = 'musicPulse 2s ease-in-out infinite';
     }
 
-    // Unlock AudioContext on the earliest possible gesture (before navigation fires)
-    function unlockAndPlay() {
-      actx.resume().then(() => { if (!musicOn) startMusicLoop(); });
-    }
-    document.addEventListener('touchstart', unlockAndPlay, { once: true, passive: true });
-    document.addEventListener('mousedown',  unlockAndPlay, { once: true });
+    // Unlock AudioContext on the earliest gesture (autoplay policy)
+    // ONLY unlocks — does NOT start music, to avoid conflicting with the button click
+    document.addEventListener('touchstart', () => actx.resume(), { once: true, passive: true });
+    document.addEventListener('mousedown',  () => actx.resume(), { once: true });
 
-    // Manual toggle button
+    // Music button — sole start/stop control
     document.getElementById('music-btn').addEventListener('click', e => {
       e.stopPropagation();
-      if (musicOn) { stopLandingMusic(); }
-      else { actx.resume().then(startMusicLoop); }
+      actx.resume().then(() => {
+        if (musicOn) { stopLandingMusic(); }
+        else { startMusicLoop(); }
+      });
     });
   </script>
 </body>

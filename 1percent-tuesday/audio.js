@@ -187,15 +187,14 @@ class AudioEngine {
       if (!this.ctx || !this.enabled) return;
       const s = this._bgStep % 32;
       const stepSec = STEP_MS / 1000;
-      const f = cfg.f;
 
       if (cfg.kick[s])  this._kick(0);
       if (cfg.snare[s]) { this._noise(0.08, 0, 0.1, 2000); this._osc('sine', 200, 0.05, 0, 0.08); }
       if (cfg.hihat[s]) this._noise(0.025, 0, 0.035, 9000);
       if (cfg.ohhat[s]) this._noise(0.04,  0, 0.09,  7000);
-      if (cfg.bass[s])  this._osc('sawtooth', cfg.bass[s] * f, 0.08, 0, stepSec * 1.6);
-      if (cfg.mel[s])   this._osc('triangle', cfg.mel[s]  * f, 0.07, 0, stepSec * 1.8);
-      if (cfg.pad[s])   this._osc('sine',     cfg.pad[s]  * f, 0.04, 0, stepSec * 3.5);
+      if (cfg.bass[s])  this._osc('sawtooth', cfg.bass[s], 0.08, 0, stepSec * 1.6);
+      if (cfg.mel[s])   this._osc('triangle', cfg.mel[s],  0.07, 0, stepSec * 1.8);
+      if (cfg.pad[s])   this._osc('sine',     cfg.pad[s],  0.04, 0, stepSec * 3.5);
 
       this._bgStep++;
     }, STEP_MS);
