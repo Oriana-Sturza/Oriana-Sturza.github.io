@@ -156,11 +156,13 @@
 
     // pulse animation for the music button
     const musicStyle = document.createElement('style');
-    musicStyle.textContent = `@keyframes musicPulse { 0%,100%{transform:scale(1);opacity:.8} 50%{transform:scale(1.12);opacity:1} }`;
+    musicStyle.textContent = `@keyframes musicPulse { 0%,100%{transform:scale(1);opacity:.8} 50%{transform:scale(1.15);opacity:1} }`;
     document.head.appendChild(musicStyle);
 
     // ── LANDING PAGE AMBIENT MUSIC ──
-    let actx = null, musicOn = false, musicInterval = null, musicStep = 0;
+    // AudioContext created immediately (suspended) — unlocked on first gesture
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    let musicOn = false, musicInterval = null, musicStep = 0;
 
     const MELODY = [
       440, 554, 659, 880,  740, 659, 554, 440,
@@ -172,7 +174,7 @@
                   165,0,0,0,0,0,0,0, 185,0,0,0,0,0,0,0];
 
     function lp_note(freq, vol, dur, type='sine') {
-      if (!actx || actx.state !== 'running') return;
+      if (actx.state !== 'running') return;
       const t = actx.currentTime;
       const o = actx.createOscillator(), g = actx.createGain();
       o.connect(g); g.connect(actx.destination);
@@ -183,23 +185,20 @@
       o.start(t); o.stop(t + dur + 0.05);
     }
 
-    function startLandingMusic() {
-      if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
-      actx.resume().then(() => {
-        clearInterval(musicInterval);
-        musicStep = 0;
-        musicInterval = setInterval(() => {
-          const s = musicStep % 32;
-          lp_note(MELODY[s], 0.055, 0.55);
-          if (s % 4 === 0) lp_note(MELODY[s] * 0.5, 0.025, 0.9);
-          if (BASS[s]) lp_note(BASS[s], 0.045, 1.1, 'triangle');
-          musicStep++;
-        }, 340);
-        musicOn = true;
-        document.getElementById('music-btn').textContent = '🔇';
-        document.getElementById('music-label').textContent = 'music on';
-        document.getElementById('music-btn').style.animation = 'none';
-      });
+    function startMusicLoop() {
+      if (musicOn) return;
+      musicOn = true;
+      musicStep = 0;
+      document.getElementById('music-btn').textContent = '🔇';
+      document.getElementById('music-label').textContent = 'music on';
+      document.getElementById('music-btn').style.animation = 'none';
+      musicInterval = setInterval(() => {
+        const s = musicStep % 32;
+        lp_note(MELODY[s], 0.055, 0.55);
+        if (s % 4 === 0) lp_note(MELODY[s] * 0.5, 0.025, 0.9);
+        if (BASS[s]) lp_note(BASS[s], 0.045, 1.1, 'triangle');
+        musicStep++;
+      }, 340);
     }
 
     function stopLandingMusic() {
@@ -210,8 +209,18 @@
       document.getElementById('music-btn').style.animation = 'musicPulse 2s ease-in-out infinite';
     }
 
-    document.getElementById('music-btn').addEventListener('click', () => {
-      musicOn ? stopLandingMusic() : startLandingMusic();
+    // Unlock AudioContext on the earliest possible gesture (before navigation fires)
+    function unlockAndPlay() {
+      actx.resume().then(() => { if (!musicOn) startMusicLoop(); });
+    }
+    document.addEventListener('touchstart', unlockAndPlay, { once: true, passive: true });
+    document.addEventListener('mousedown',  unlockAndPlay, { once: true });
+
+    // Manual toggle button
+    document.getElementById('music-btn').addEventListener('click', e => {
+      e.stopPropagation();
+      if (musicOn) { stopLandingMusic(); }
+      else { actx.resume().then(startMusicLoop); }
     });
   </script>
 </body>
