@@ -53,6 +53,9 @@
     </div>
   </div>
 
+  <!-- Music toggle button -->
+  <button id="music-btn" style="position:fixed;bottom:20px;right:20px;z-index:99;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);border-radius:50%;width:44px;height:44px;font-size:1.2rem;cursor:pointer;backdrop-filter:blur(8px);transition:background .2s" title="Toggle music">🎵</button>
+
   <script>
     // Starfield
     const sf = document.getElementById('starfield');
@@ -147,6 +150,69 @@
       setTimeout(spawnRainbow, 18000 + Math.random() * 18000);
     }
     setTimeout(spawnRainbow, 3000 + Math.random() * 4000);
+
+    // ── LANDING PAGE AMBIENT MUSIC ──
+    let actx = null, musicOn = false, musicInterval = null, musicStep = 0;
+
+    // A-major pentatonic arpeggio — gentle, celebratory
+    const MELODY = [
+      440, 554, 659, 880,  740, 659, 554, 440,
+      330, 440, 554, 659,  880, 659, 554, 330,
+      440, 659, 880, 1047, 880, 659, 440, 330,
+      554, 659, 880, 740,  659, 554, 440, 330
+    ];
+    // Soft bass chord notes underneath (every 8 steps)
+    const BASS = [220, 0, 0, 0, 0, 0, 0, 0,  247, 0, 0, 0, 0, 0, 0, 0,
+                  165, 0, 0, 0, 0, 0, 0, 0,  185, 0, 0, 0, 0, 0, 0, 0];
+
+    function playNote(freq, vol, dur, type = 'sine') {
+      if (!actx) return;
+      const t = actx.currentTime;
+      const o = actx.createOscillator(), g = actx.createGain();
+      o.connect(g); g.connect(actx.destination);
+      o.type = type; o.frequency.value = freq;
+      g.gain.setValueAtTime(0, t);
+      g.gain.linearRampToValueAtTime(vol, t + 0.025);
+      g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+      o.start(t); o.stop(t + dur + 0.05);
+    }
+
+    function startLandingMusic() {
+      if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
+      if (actx.state === 'suspended') actx.resume();
+      clearInterval(musicInterval);
+      musicStep = 0;
+      const STEP = 340; // ms per arpeggio note (~88 BPM 8ths)
+      musicInterval = setInterval(() => {
+        const s = musicStep % 32;
+        playNote(MELODY[s], 0.055, 0.55);                    // sparkly melody
+        if (s % 4 === 0) playNote(MELODY[s] * 0.5, 0.025, 0.9); // soft octave below
+        if (BASS[s]) playNote(BASS[s], 0.045, 1.1, 'triangle'); // bass pad
+        musicStep++;
+      }, STEP);
+      musicOn = true;
+      document.getElementById('music-btn').textContent = '🔇';
+    }
+
+    function stopLandingMusic() {
+      clearInterval(musicInterval);
+      musicOn = false;
+      document.getElementById('music-btn').textContent = '🎵';
+    }
+
+    // Start on first interaction anywhere on page
+    function firstInteraction() {
+      document.removeEventListener('click', firstInteraction);
+      document.removeEventListener('touchstart', firstInteraction);
+      startLandingMusic();
+    }
+    document.addEventListener('click', firstInteraction);
+    document.addEventListener('touchstart', firstInteraction);
+
+    document.getElementById('music-btn').addEventListener('click', e => {
+      e.stopPropagation();
+      musicOn ? stopLandingMusic() : startLandingMusic();
+    });
   </script>
 </body>
 </html>
