@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Witcher Meme Idea Generator | NewToWitcher</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #0a0a0e;
+      color: #f5f2eb;
+      min-height: 100vh;
+      padding: 30px 16px 60px;
+    }
+
+    header {
+      text-align: center;
+      padding: 40px 0 30px;
+      border-bottom: 2px solid #d4af37;
+      margin-bottom: 40px;
+    }
+    header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.6rem);
+      color: #d4af37;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+    header p {
+      color: #a09890;
+      margin-top: 10px;
+      font-size: 1rem;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 36px;
+    }
+
+    select, button {
+      padding: 12px 22px;
+      border-radius: 6px;
+      font-size: 1rem;
+      cursor: pointer;
+      border: 2px solid #d4af37;
+    }
+    select {
+      background: #14141a;
+      color: #f5f2eb;
+      min-width: 200px;
+    }
+    select option { background: #14141a; }
+
+    button {
+      background: #d4af37;
+      color: #0a0a0e;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: background 0.2s, transform 0.1s;
+    }
+    button:hover  { background: #f0d264; }
+    button:active { transform: scale(0.97); }
+
+    #copy-all-btn {
+      background: transparent;
+      color: #d4af37;
+      font-size: 0.85rem;
+      padding: 8px 16px;
+    }
+    #copy-all-btn:hover { background: #1a1a22; }
+
+    #results {
+      max-width: 820px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .card {
+      background: #13131a;
+      border: 1px solid #2a2820;
+      border-left: 4px solid #d4af37;
+      border-radius: 8px;
+      padding: 22px 24px;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-left-color: #f0d264; }
+
+    .card-number {
+      font-size: 0.75rem;
+      color: #d4af37;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+    .card-type {
+      display: inline-block;
+      font-size: 0.7rem;
+      background: #1e1c10;
+      color: #d4af37;
+      border: 1px solid #d4af37;
+      border-radius: 3px;
+      padding: 2px 8px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+    .card h3 {
+      font-size: 1.15rem;
+      color: #f5f2eb;
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+    .card-caption {
+      font-size: 0.92rem;
+      color: #a09890;
+      line-height: 1.6;
+      border-top: 1px solid #2a2820;
+      padding-top: 12px;
+      margin-top: 4px;
+      white-space: pre-wrap;
+    }
+    .card-caption strong { color: #d4f0b0; font-weight: normal; }
+
+    .copy-btn {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: transparent;
+      border: 1px solid #3a3820;
+      color: #7a7060;
+      font-size: 0.72rem;
+      padding: 4px 10px;
+      border-radius: 4px;
+      letter-spacing: 0;
+      text-transform: none;
+      font-weight: normal;
+    }
+    .copy-btn:hover { border-color: #d4af37; color: #d4af37; background: transparent; }
+    .copy-btn.copied { color: #80c080; border-color: #80c080; }
+
+    #placeholder {
+      text-align: center;
+      color: #3a3530;
+      padding: 60px 20px;
+      font-size: 1.1rem;
+    }
+    #placeholder span { display: block; font-size: 2.5rem; margin-bottom: 16px; }
+
+    footer {
+      text-align: center;
+      margin-top: 60px;
+      color: #3a3530;
+      font-size: 0.8rem;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Witcher Meme Generator</h1>
+  <p>Fresh ideas for your NewToWitcher Facebook page — one click, five ideas, ready to post.</p>
+</header>
+
+<div class="controls">
+  <select id="topic-filter">
+    <option value="all">All Topics</option>
+    <option value="geralt">Geralt</option>
+    <option value="jaskier">Jaskier</option>
+    <option value="roach">Roach</option>
+    <option value="witcher4">Witcher 4 News</option>
+    <option value="season5">Season 5</option>
+    <option value="newcomer">Newcomer Reactions</option>
+    <option value="timeline">Timeline Confusion</option>
+    <option value="cavill">Henry Cavill</option>
+  </select>
+
+  <button onclick="generate()">Generate 5 Ideas</button>
+  <button id="copy-all-btn" onclick="copyAll()">Copy All</button>
+</div>
+
+<div id="results">
+  <div id="placeholder">
+    <span>⚔</span>
+    Click Generate to get your meme ideas
+  </div>
+</div>
+
+<footer>NewToWitcher &nbsp;•&nbsp; Meme Idea Generator</footer>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+
+const topics = {
+  geralt: [
+    {
+      type: "List",
+      title: "Things I've noticed about Geralt after 3 episodes",
+      caption: `Things I have noticed about Geralt after 3 episodes:
+
+>> He has exactly two emotions: quiet and slightly less quiet
+>> His hair is doing 90% of the acting
+>> Every single person he meets immediately has a problem with him
+>> He sighs like a man who has been awake since medieval times
+>> He is correct about everything and absolutely nobody listens
+
+I am rooting for this exhausted man.`
+    },
+    {
+      type: "Reaction",
+      title: "Me realising Geralt doesn't explain ANYTHING",
+      caption: `Me: okay so where are we going
+Geralt: Hmm.
+Me: and who was that man
+Geralt: *walks away*
+Me: and why does everyone want you dead specifically
+Geralt: *mounts Roach*
+
+I have seen every episode. I have zero answers.`
+    },
+    {
+      type: "Hot Take",
+      title: "Geralt communicates entirely in grunts and I respect it",
+      caption: `Hot take: Geralt of Rivia has not said more than 12 words in a row at any point in this show and he is STILL the most compelling character on screen.
+
+The hair. The sighing. The "hmm."
+
+Somehow it works. Someone explain this to me.`
+    },
+    {
+      type: "Discussion",
+      title: "Is Geralt the grumpiest man alive or is he just tired",
+      caption: `Genuine question: is Geralt grumpy or is he just absolutely exhausted all the time?
+
+Because the more I watch the more I think he is simply a man who has Seen Too Much and would like everyone to leave him alone for five minutes.
+
+Comment: grumpy OR tired? You cannot say both.`
+    },
+    {
+      type: "Observation",
+      title: "Geralt is correct about everything and pays dearly for it",
+      caption: `The Witcher formula as far as I can tell:
+
+1. Geralt says what the right thing to do is
+2. Everyone ignores him
+3. The exact thing he predicted happens
+4. Geralt has to fix it
+5. Nobody thanks him
+6. Repeat
+
+Three episodes in and I am personally exhausted on his behalf.`
+    }
+  ],
+
+  jaskier: [
+    {
+      type: "Earworm",
+      title: "Toss a Coin has been in my head for 11 days",
+      caption: `DAY 11 of having Toss a Coin to Your Witcher in my head.
+
+I do not know what a Witcher is.
+I do not know what valley this is.
+I have no context for any of this.
+And yet here we are.
+
+Jaskier you absolute menace. I would die for you.`
+    },
+    {
+      type: "Discussion",
+      title: "Jaskier should not be alive and yet",
+      caption: `My question for the day: how is Jaskier still alive.
+
+This man has:
+>> Annoyed every person he has ever met
+>> Followed Geralt into no fewer than 6 situations he had no business being in
+>> Somehow charmed his way out of all of them
+
+He is like a golden retriever that wandered into a war. I love him. Someone explain how he survives.`
+    },
+    {
+      type: "Hot Take",
+      title: "Jaskier is actually the main character",
+      caption: `Controversial opinion: Jaskier is the main character of The Witcher and Geralt is just the guy the show is technically about.
+
+Fight me in the comments.`
+    }
+  ],
+
+  roach: [
+    {
+      type: "Petition",
+      title: "Official petition to make Roach the main character",
+      caption: `OFFICIAL PETITION to make Roach the main character of The Witcher.
+
+Evidence:
+>> She shows up everywhere
+>> She never complains
+>> Geralt leaves her in random fields and she always comes back
+>> She has never once done anything wrong
+>> She is the only one in this show with a consistent moral compass
+
+Sign below if you agree. Geralt does not deserve her.`
+    },
+    {
+      type: "Observation",
+      title: "Roach appears in places she should not be able to reach",
+      caption: `I need someone to explain to me how Roach keeps appearing in locations she could not logistically have reached.
+
+Geralt leaves her outside. Goes into a dungeon. Somehow Roach is in the dungeon.
+
+Nobody addresses this. Nobody questions it. She is just there.
+
+Roach is the most powerful character in this entire show.`
+    }
+  ],
+
+  witcher4: [
+    {
+      type: "News Reaction",
+      title: "Apparently there's a Witcher 4 and I just found out",
+      caption: `Wait.
+
+There is a Witcher 4?
+
+Like there is a 1, 2 and 3? And games? There are GAMES?
+
+I just started the Netflix show last month. I did not know the lore went this deep. Someone give me a beginner's roadmap. Please use small words.`
+    },
+    {
+      type: "Discussion",
+      title: "Witcher 4 details are dropping and I understand none of them",
+      caption: `The Witcher fan community right now:
+
+"CIRI HAS A JUMP BUTTON!! 80 NEW ANIMATIONS!! CDPR SAID AT UNREAL FEST—"
+
+Me, who just started the show:
+
+"so she's the girl with the white hair?"
+
+Still watching Season 1. Please be patient with me.`
+    },
+    {
+      type: "Hot Take",
+      title: "I started watching The Witcher at the worst possible time",
+      caption: `Me: *starts watching The Witcher for the first time*
+Also happening simultaneously:
+>> Witcher 4 news dropping
+>> Season 5 announced
+>> New comics
+>> New board game
+>> The whole Henry Cavill thing I'm still processing
+
+I picked the most chaotic possible moment to become a fan of this franchise.`
+    }
+  ],
+
+  season5: [
+    {
+      type: "News Reaction",
+      title: "Netflix confirmed Season 5 is the last season",
+      caption: `Netflix just confirmed The Witcher Season 5 is coming in 2026 — and it's the FINAL season.
+
+I started watching this show approximately three weeks ago.
+
+I have not finished Season 1.
+
+This is fine.`
+    },
+    {
+      type: "Discussion",
+      title: "Are you watching until the end or did you tap out",
+      caption: `With Season 5 confirmed as the final Witcher season — honest question:
+
+Are you watching until the end, or did you already tap out?
+
+I'm new so I have no emotional damage yet. Tell me what I'm in for.`
+    }
+  ],
+
+  newcomer: [
+    {
+      type: "List",
+      title: "My questions after watching The Witcher",
+      caption: `MY QUESTIONS after watching The Witcher:
+
+>> What IS a witcher exactly
+>> Why does everyone have a personal grudge against him specifically
+>> How is Jaskier still alive
+>> Who was that man in episode 3
+>> Actually who was that man in every episode
+
+Someone please answer these. I am asking politely.`
+    },
+    {
+      type: "Observation",
+      title: "Characters I understand vs characters I do not",
+      caption: `Characters I understand so far:
+
+>> Geralt: grumpy, good, tired. Clear.
+>> Jaskier: annoying but lovable. Clear.
+>> Roach the horse: flawless. Clear.
+>> Everyone else: ???
+>> The politics: absolutely not.
+
+I am three episodes in. Please be patient.`
+    },
+    {
+      type: "Reaction",
+      title: "I have been watching this for a week and have zero idea what is happening",
+      caption: `Genuine update from someone who started The Witcher last week:
+
+I have watched six episodes. I understand the following things:
+>> Geralt is the Witcher
+>> Jaskier is his friend/problem
+>> Roach is the horse and she is perfect
+
+Everything else is a mystery and I have accepted this as my reality.`
+    },
+    {
+      type: "Hot Take",
+      title: "The Witcher fandom is the most patient with newcomers",
+      caption: `Shoutout to every Witcher fan who has answered my extremely basic questions this week without making me feel bad about it.
+
+"What's a witcher?" — answered kindly.
+"Who is Yennefer?" — answered with enthusiasm.
+"Is the timeline confusing on purpose?" — answered with a kind yes.
+
+Best fandom. Truly.`
+    }
+  ],
+
+  timeline: [
+    {
+      type: "Chaos",
+      title: "Me trying to follow the Witcher timeline",
+      caption: `wait — is this the PAST?
+or is this the FUTURE past?
+or is Ciri just—
+hold on who is that man
+why is he younger now
+IS GERALT DEAD OR NOT
+
+(I have seen every episode.)`
+    },
+    {
+      type: "Discussion",
+      title: "Nobody told me the timeline was like this",
+      caption: `Nobody warned me that The Witcher runs on approximately three different timelines at once.
+
+I thought I was bad at paying attention. Turns out everyone is confused.
+
+If you figured it out please explain it in the comments. Slowly. I will wait.`
+    },
+    {
+      type: "Hot Take",
+      title: "The Witcher timeline is a personal attack",
+      caption: `The Witcher timeline was specifically designed to humble me and I think that's okay.
+
+I have made peace with not knowing when anything is happening. I'm just here for the vibes and the horse.`
+    }
+  ],
+
+  cavill: [
+    {
+      type: "News Reaction",
+      title: "Just found out Henry Cavill left The Witcher",
+      caption: `JUST FOUND OUT Henry Cavill left The Witcher.
+
+Apparently this happened a while ago.
+Apparently everyone already knew.
+Apparently I am the last person on earth to find out.
+
+I have so many questions. Someone explain the full story in the comments. I need to know everything.`
+    },
+    {
+      type: "Discussion",
+      title: "Can someone explain the Henry Cavill situation",
+      caption: `I've now heard five different versions of why Henry Cavill left The Witcher and none of them fully add up.
+
+I'm not taking sides. I just want to understand what actually happened.
+
+Comment below with your version. I'll read all of them.`
+    },
+    {
+      type: "Reaction",
+      title: "Finding out about Henry Cavill as a new fan",
+      caption: `Me, excitedly starting The Witcher: wow I love this grumpy white-haired man
+
+Also me, five minutes of googling later: wait he LEFT? He's not IN IT anymore?
+
+The stages of grief I went through in the span of one afternoon.`
+    }
+  ]
+};
+
+// ─── GENERATE ────────────────────────────────────────────────────────────────
+
+function getAllIdeas() {
+  const all = [];
+  for (const key in topics) {
+    topics[key].forEach(idea => all.push({ ...idea, topic: key }));
+  }
+  return all;
+}
+
+function getIdeasForFilter(filter) {
+  if (filter === 'all') return getAllIdeas();
+  return (topics[filter] || []).map(idea => ({ ...idea, topic: filter }));
+}
+
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function generate() {
+  const filter = document.getElementById('topic-filter').value;
+  let pool = getIdeasForFilter(filter);
+
+  // If specific topic has fewer than 5, pad with random from all
+  if (pool.length < 5) {
+    const extras = shuffle(getAllIdeas().filter(i => i.topic !== filter));
+    pool = [...shuffle(pool), ...extras];
+  } else {
+    pool = shuffle(pool);
+  }
+
+  const picks = pool.slice(0, 5);
+  const container = document.getElementById('results');
+  container.innerHTML = '';
+
+  picks.forEach((idea, i) => {
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.dataset.caption = idea.caption;
+
+    card.innerHTML = `
+      <div class="card-number">Idea ${i + 1} of 5</div>
+      <span class="card-type">${idea.type}</span>
+      <button class="copy-btn" onclick="copyCard(this)">Copy</button>
+      <h3>${idea.title}</h3>
+      <div class="card-caption">${escHtml(idea.caption)}</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function copyCard(btn) {
+  const card = btn.closest('.card');
+  const text = `${card.querySelector('h3').textContent}\n\n${card.dataset.caption}`;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function copyAll() {
+  const cards = document.querySelectorAll('.card');
+  if (!cards.length) return;
+  const text = [...cards].map((c, i) =>
+    `IDEA ${i+1}: ${c.querySelector('h3').textContent}\n\n${c.dataset.caption}`
+  ).join('\n\n' + '─'.repeat(40) + '\n\n');
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copy-all-btn');
+    btn.textContent = 'Copied All!';
+    setTimeout(() => { btn.textContent = 'Copy All'; }, 2000);
+  });
+}
+
+// Generate on load
+generate();
+</script>
+</body>
+</html>
