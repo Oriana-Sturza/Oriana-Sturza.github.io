@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Plumir Email Signature Preview</title>
+  <style>
+    body {
+      background: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      font-family: Arial, sans-serif;
+    }
+    .preview-box {
+      background: white;
+      padding: 40px;
+      border-radius: 8px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      max-width: 500px;
+      width: 100%;
+    }
+    .label {
+      font-size: 12px;
+      color: #999;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+<body>
+  <div class="preview-box">
+    <p class="label">Email Signature Preview</p>
+
+    <table cellpadding="0" cellspacing="0" style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
+      <tr>
+        <td style="padding-right: 15px; border-right: 2px solid #2d8a2d; vertical-align: middle;">
+          <img src="https://pbs.twimg.com/profile_images/1234567890/plumir-logo.png" alt="Plumir"
+            width="70"
+            onerror="this.onerror=null; this.src=''; this.style.display='none'; document.getElementById('placeholder').style.display='block';">
+          <div id="placeholder" style="display:block; width:70px; height:70px; background:#e8f5e9; border-radius:8px; display:flex; align-items:center; justify-content:center;">
+            <span style="color:#2d8a2d; font-size:11px; text-align:center;">Your<br>Logo</span>
+          </div>
+        </td>
+        <td style="padding-left: 15px; vertical-align: middle;">
+          <p style="margin: 0; font-weight: bold; font-size: 15px;">Ori at Plumir</p>
+          <p style="margin: 2px 0; color: #2d8a2d; font-size: 13px;">CEO & Founder</p>
+          <p style="margin: 2px 0; font-size: 13px;">
+            <a href="mailto:business@plumir.com" style="color: #333; text-decoration: none;">business@plumir.com</a>
+          </p>
+          <p style="margin: 2px 0; font-size: 13px;">
+            <a href="https://www.plumir.com" style="color: #2d8a2d; text-decoration: none;">www.plumir.com</a>
+          </p>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>
