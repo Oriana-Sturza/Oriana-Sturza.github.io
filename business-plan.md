@@ -50,7 +50,8 @@ Plumir solves a clear frustration for independent sellers: unpredictable platfor
 - Access to a curated marketplace of independent sellers
 - Secure checkout via Stripe
 - Ability to browse multiple sellers in one place
-- Contact sellers or Plumir support via Tally-powered forms
+- Contact Plumir support via Tally-powered contact forms
+- Buyer-to-seller messaging for questions before purchase (subject to testing — Sharetribe has built-in messaging that may already support this)
 
 ### Revenue Model
 
@@ -146,13 +147,14 @@ The UK handmade and independent seller market is substantial. Etsy reported over
 - **Marketplace platform:** Sharetribe (handles storefronts, listings, transactions)
 - **Payments:** Stripe (subscription billing for seller memberships + buyer checkouts)
 - **Automation:** Zapier (connects Sharetribe to Stripe for membership start/cancellation flows)
-- **Forms:** Tally (contact us, seller enquiries)
+- **Forms:** Tally (contact us forms for anyone — sellers or buyers — to reach Plumir; not for user-to-user communication)
 - **Email/domain:** Existing mailbox setup (~included in monthly costs)
 
 ### Pre-Launch Checklist
 - [ ] Full read-through and review of all website copy
 - [ ] Review and finalise all legal policies (Terms of Service, Privacy Policy, Seller Agreement, Refund Policy)
 - [ ] Complete FAQ page
+- [ ] Test buyer-to-seller messaging (Sharetribe has this built in — check if it's enabled and working)
 - [ ] Retest seller sign-up flow end-to-end
 - [ ] Retest buyer sign-up flow end-to-end
 - [ ] Retest payment and membership billing (Stripe + Zapier)
@@ -270,6 +272,7 @@ A native mobile app (iOS and Android) for both buyers and sellers. By this point
   - Both tiers require Sharetribe Flex for the custom listing-limit logic.
 - **EU expansion:** Adapt payment flows and policies for European sellers; multilingual support
 - **Buyer features:** Wishlist, seller following, buyer reviews
+- **Buyer-to-seller messaging:** Sharetribe has built-in messaging — test whether this is already active on the platform. Standard on marketplaces like Etsy and Vinted; allows buyers to ask sellers questions before purchasing.
 - **Seller tools:** Shipping integrations, bulk listing import, discount/voucher tools
 
 ---
