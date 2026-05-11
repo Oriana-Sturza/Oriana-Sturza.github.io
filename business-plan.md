@@ -228,29 +228,30 @@ The UK handmade and independent seller market is substantial. Etsy reported over
 
 ## 9. Milestones & Timeline
 
+Post-launch development will be driven by business performance, not fixed dates. New features will only be built once the platform is gaining consistent traction and generating stable revenue — there is no value in building more before the core is working.
+
 | Milestone | Target |
 |---|---|
 | Complete pre-launch QA and content review | May–June 2026 |
 | Register with ICO | Before or at launch |
 | Register partnership with HMRC; obtain business UTR | At launch / when ready to trade |
 | Launch Plumir to the public | June–July 2026 |
-| First 19 sellers (break-even) | Month 2 post-launch |
-| First 50 sellers | Month 3 post-launch |
-| Begin paid marketing | Month 3–4 post-launch |
-| 100 active sellers | Month 6 post-launch |
-| Migrate to Sharetribe Flex plan | Month 6–9 post-launch |
+| First 19 sellers (break-even) | TBC post-launch |
+| First 50 sellers | TBC post-launch |
+| Begin paid marketing | Once organic growth is working |
+| Platform consistently profitable and growing | Trigger for next phase |
+| Migrate to Sharetribe Flex plan | Once business is stable and revenue is consistent |
 | Launch multi-item basket / multi-store cart | Post-Flex migration |
 | Launch seller analytics dashboard | Post-basket; subject to Sharetribe Flex capabilities |
-| Review pricing / introduce membership tiers | Month 9–12 post-launch |
-| 200 active sellers | Month 12 post-launch |
-| Begin mobile app development | Year 2 |
-| Explore EU expansion | Year 2 |
+| Review pricing / introduce membership tiers | When platform is established |
+| Begin mobile app development | When platform and revenue are stable |
+| Explore EU expansion | When UK market is well established |
 
 ---
 
 ## 10. Future Development Roadmap
 
-All features below require migrating from the current Sharetribe plan to **Sharetribe Flex** (their developer/API plan), which unlocks full custom coding of the platform. This migration is planned once the business is stable post-launch.
+All features below require migrating from the current Sharetribe plan to **Sharetribe Flex** (their developer/API plan), which unlocks full custom coding of the platform. This migration will only happen once the business is live, gaining traction, and generating consistent revenue — the priority is proving the core works first before investing in new development.
 
 ### Priority 1 — Multi-Item Basket (Post-Launch, Post-Flex Migration)
 Currently the platform supports one item per transaction. The first major development priority is building a basket system similar to Etsy's, allowing buyers to add items from multiple different seller stores into a single cart and check out in one transaction. This is a significant improvement to the buyer experience and will likely increase average order values. Requires Sharetribe Flex for custom transaction flow development.
