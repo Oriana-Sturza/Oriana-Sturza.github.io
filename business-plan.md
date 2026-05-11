@@ -57,7 +57,8 @@ Plumir solves a clear frustration for independent sellers: unpredictable platfor
 | Revenue stream | Detail |
 |---|---|
 | Seller memberships | £15.99 × number of active seller accounts per month |
-| Future: tiered plans | Potential introduction of higher tiers with additional features (e.g. promoted listings, analytics) as the platform matures |
+| Future: starter tier | A lower-priced tier with a limited number of listings — aimed at new or smaller sellers who want to try the platform at lower risk before committing to the full plan. Requires Sharetribe Flex to implement listing limits per membership tier. |
+| Future: premium tier | A higher-priced tier with added features such as promoted listings, analytics, or priority support — for established sellers who want more visibility. |
 
 **Break-even analysis (monthly):**
 
@@ -263,7 +264,10 @@ Give sellers visibility into their store performance — sales trends, most view
 A native mobile app (iOS and Android) for both buyers and sellers. By this point the platform will be on Sharetribe Flex, meaning the app can be built against the same API. Priority will be the buyer shopping experience first, then seller store management features.
 
 ### Additional Future Features
-- **Membership tiers:** Introduce a higher tier (e.g. £29.99/month) bundling features like promoted listings, priority support, or advanced analytics
+- **Membership tiers:** Introduce two additional tiers alongside the current £15.99 unlimited plan:
+  - *Starter tier* — lower price point, limited number of listing slots, aimed at new or small sellers who want to try the platform without financial risk. Ideal as a conversion funnel: sellers join cheap, see it works, upgrade.
+  - *Premium tier* — higher price, unlimited listings plus added features (promoted listings, analytics, priority support). For established sellers who want more.
+  - Both tiers require Sharetribe Flex for the custom listing-limit logic.
 - **EU expansion:** Adapt payment flows and policies for European sellers; multilingual support
 - **Buyer features:** Wishlist, seller following, buyer reviews
 - **Seller tools:** Shipping integrations, bulk listing import, discount/voucher tools
