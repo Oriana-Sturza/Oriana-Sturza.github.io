@@ -147,7 +147,7 @@ The UK handmade and independent seller market is substantial. Etsy reported over
 ### Technology Stack
 - **Marketplace platform:** Sharetribe (handles storefronts, listings, transactions)
 - **Payments:** Stripe (subscription billing for seller memberships + buyer checkouts)
-- **Automation:** Zapier (connects Sharetribe to Stripe for membership start/cancellation flows)
+- **Automation:** Zapier — two Zaps required: (1) seller onboarding Zap already built — triggers when a Stripe subscription is created and notifies Sharetribe; (2) cancellation/pause Zap to build — triggers when a Stripe subscription is cancelled or paused and restricts/deactivates the seller's store in Sharetribe
 - **Forms:** Tally (contact us forms for anyone — sellers or buyers — to reach Plumir; not for user-to-user communication)
 - **Email/domain:** Existing mailbox setup (~included in monthly costs)
 
@@ -158,8 +158,9 @@ The UK handmade and independent seller market is substantial. Etsy reported over
 - [ ] Test buyer-to-seller messaging (Sharetribe has this built in — check if it's enabled and working)
 - [ ] Retest seller sign-up flow end-to-end
 - [ ] Retest buyer sign-up flow end-to-end
+- [ ] Build Zapier cancellation/pause Zap (Stripe → Sharetribe when a subscription is cancelled or paused)
 - [ ] Retest payment and membership billing (Stripe + Zapier)
-- [ ] Test membership cancellation flow
+- [ ] Test membership cancellation flow end-to-end including the Zapier automation
 - [ ] Set up social media accounts
 - [ ] Soft launch / friends & family testing round
 
@@ -438,11 +439,13 @@ With automatic daily payouts enabled, sellers can expect approximately 2–3 bus
 
 ---
 
-**Can sellers pause their subscription?**
+**Can sellers pause or cancel their subscription?**
 
 No built-in pause option exists in Stripe. Still to test: whether a seller can cancel their subscription but keep their store active. If so, an FAQ entry needs to be added for the seller account cancellation point.
 
-Important note: If sellers can cancel or pause their payment without the platform being automatically notified, they could continue using their store without paying. Investigating using Zapier to automate Stripe notifying Sharetribe when a user cancels or pauses — this needs to be resolved before launch.
+This will be handled via Zapier — the same way seller onboarding is already automated (a Zap connects Stripe to Sharetribe when a membership is created). A second Zap needs to be built to cover the other direction: when a seller cancels or pauses their Stripe subscription, Stripe notifies Sharetribe automatically so the store is restricted or deactivated without any manual intervention. Without this Zap, a seller could cancel their payment and continue using their store for free.
+
+To do: Build the cancellation/pause Zap in Zapier before launch. Test both the cancellation flow and the pause flow end-to-end.
 
 ---
 
