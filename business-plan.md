@@ -1,6 +1,6 @@
 # Plumir — Business Plan
 **Date:** May 2026  
-**Version:** 1.0
+**Version:** 1.1
 
 ---
 
@@ -211,15 +211,17 @@ The UK handmade and independent seller market is substantial. Etsy reported over
 ## 8. Legal & Administrative
 
 - **Business structure:** Partnership (consider registering as an LLP or Ltd company as the business grows, for liability protection)
-- **HMRC:** Register the partnership with HMRC for Self Assessment; file partnership tax return annually
-- **VAT:** Register for VAT once turnover exceeds the UK threshold (currently £90,000/year) — unlikely in year 1, but monitor
-- **Partnership agreement:** Strongly recommended — a written agreement covering profit split, decision-making, what happens if one partner leaves, and IP ownership
-- **Data protection:** Register with the ICO (Information Commissioner's Office) as you process personal data — required under UK GDPR (low annual fee)
+- **HMRC — personal UTR numbers:** Both partners already hold individual UTR (Unique Taxpayer Reference) numbers and file personal Self Assessments. A separate UTR for the Plumir business partnership will be obtained when the business is formally registered — this is required to file the annual Partnership Tax Return (SA800) alongside each partner's personal return.
+- **HMRC — partnership registration:** Register the partnership with HMRC when ready to trade. Each partner then declares their 50% share of profit on their personal Self Assessment each year.
+- **VAT:** Plumir is not currently VAT-registered and does not charge VAT. Registration is only required once annual taxable turnover exceeds £90,000 — not expected in Year 1. Monitor turnover as the business grows and register proactively before reaching the threshold.
+- **Partnership agreement:** Strongly recommended — a written agreement covering profit split, decision-making, what happens if one partner leaves, and IP ownership.
+- **ICO registration:** Plumir must register with the Information Commissioner's Office (ICO) as a data controller. This is a legal requirement under UK GDPR and applies as soon as the business processes personal data — which includes storing seller names, email addresses, buyer delivery addresses, and transaction records. This is not about cookies; it applies regardless. Registration costs ~£40–£60/year for a small business and is done online at ico.org.uk.
+- **Cookies:** Plumir does not currently use tracking or analytics cookies (no Google Analytics, Facebook Pixel, etc.), so a cookie consent banner is not required. Sharetribe uses strictly necessary session cookies which are exempt from consent rules. A cookie policy page should still be published on the website listing the cookies in use and their purpose.
 - **Policies required on the site:**
   - Terms of Service (for sellers and buyers)
   - Privacy Policy (UK GDPR compliant)
   - Seller Agreement
-  - Cookie Policy
+  - Cookie Policy (listing strictly necessary cookies; no consent banner required)
   - Refund / Dispute Policy
 
 ---
@@ -229,23 +231,40 @@ The UK handmade and independent seller market is substantial. Etsy reported over
 | Milestone | Target |
 |---|---|
 | Complete pre-launch QA and content review | May–June 2026 |
+| Register with ICO | Before or at launch |
+| Register partnership with HMRC; obtain business UTR | At launch / when ready to trade |
 | Launch Plumir to the public | June–July 2026 |
 | First 19 sellers (break-even) | Month 2 post-launch |
 | First 50 sellers | Month 3 post-launch |
 | Begin paid marketing | Month 3–4 post-launch |
 | 100 active sellers | Month 6 post-launch |
-| Review pricing / introduce tiers | Month 9–12 post-launch |
+| Migrate to Sharetribe Flex plan | Month 6–9 post-launch |
+| Launch multi-item basket / multi-store cart | Post-Flex migration |
+| Launch seller analytics dashboard | Post-basket; subject to Sharetribe Flex capabilities |
+| Review pricing / introduce membership tiers | Month 9–12 post-launch |
 | 200 active sellers | Month 12 post-launch |
+| Begin mobile app development | Year 2 |
 | Explore EU expansion | Year 2 |
 
 ---
 
-## 10. Future Development
+## 10. Future Development Roadmap
 
-- **Membership tiers:** Once Sharetribe/Stripe/Zapier integration is better understood, introduce a higher tier (e.g. £29.99/month) with features like promoted listings, analytics dashboard, or priority support
-- **EU expansion:** Adapt payment flows and policies for European sellers; consider multilingual support
+All features below require migrating from the current Sharetribe plan to **Sharetribe Flex** (their developer/API plan), which unlocks full custom coding of the platform. This migration is planned once the business is stable post-launch.
+
+### Priority 1 — Multi-Item Basket (Post-Launch, Post-Flex Migration)
+Currently the platform supports one item per transaction. The first major development priority is building a basket system similar to Etsy's, allowing buyers to add items from multiple different seller stores into a single cart and check out in one transaction. This is a significant improvement to the buyer experience and will likely increase average order values. Requires Sharetribe Flex for custom transaction flow development.
+
+### Priority 2 — Seller Analytics Dashboard (Post-Basket)
+Give sellers visibility into their store performance — sales trends, most viewed listings, conversion data, etc. The scope will depend on what data Sharetribe Flex exposes via its API; some metrics may need to be built on top of Stripe data. This is a meaningful value-add for the seller membership and could support the introduction of a higher membership tier.
+
+### Priority 3 — Mobile App (Year 2)
+A native mobile app (iOS and Android) for both buyers and sellers. By this point the platform will be on Sharetribe Flex, meaning the app can be built against the same API. Priority will be the buyer shopping experience first, then seller store management features.
+
+### Additional Future Features
+- **Membership tiers:** Introduce a higher tier (e.g. £29.99/month) bundling features like promoted listings, priority support, or advanced analytics
+- **EU expansion:** Adapt payment flows and policies for European sellers; multilingual support
 - **Buyer features:** Wishlist, seller following, buyer reviews
-- **Mobile app:** Long-term consideration as the platform scales
 - **Seller tools:** Shipping integrations, bulk listing import, discount/voucher tools
 
 ---
