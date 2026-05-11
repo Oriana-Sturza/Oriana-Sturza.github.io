@@ -50,7 +50,6 @@ Plumir solves a clear frustration for independent sellers: unpredictable platfor
 - Access to a curated marketplace of independent sellers
 - Secure checkout via Stripe
 - Ability to browse multiple sellers in one place
-- Contact Plumir support via Tally-powered contact forms
 - Buyer-to-seller messaging for questions before purchase (subject to testing — Sharetribe has built-in messaging that may already support this)
 
 ### Revenue Model
